@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface DigitalTwinsViewProps {
   onOpenBookingModal: () => void;
+  incomingAsset?: any;
+  onAssetLoaded?: () => void;
 }
 
-const ASSETS = [
+const DEFAULT_ASSETS = [
   {
     id: 1,
     name: "North Tower - Suite 501",
@@ -31,7 +33,8 @@ const ASSETS = [
   }
 ];
 
-const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal }) => {
+const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal, incomingAsset, onAssetLoaded }) => {
+  const [assets, setAssets] = useState(DEFAULT_ASSETS);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
   
@@ -44,7 +47,7 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal 
   const [filterTime, setFilterTime] = useState('Today');
   const [filterZone, setFilterZone] = useState('All Zones');
 
-  const [selectedAsset, setSelectedAsset] = useState<typeof ASSETS[0] | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const digitalTwinRef = useRef<HTMLElement>(null);
   const [iotStates, setIotStates] = useState({
@@ -52,6 +55,30 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal 
     hvac: true,
     blinds: false,
   });
+
+  useEffect(() => {
+    if (incomingAsset) {
+        // Adapt incoming asset from Home view to Digital Twin structure if it doesn't exist
+        const adaptedAsset = {
+            id: Date.now(), // Temporary unique ID for viewing
+            name: incomingAsset.title,
+            locationCode: incomingAsset.loc ? incomingAsset.loc.split(',')[0].substring(0, 3).toUpperCase() + '01' : 'TBD',
+            status: "Available",
+            area: incomingAsset.area ? `${incomingAsset.area} sqft` : "Unknown",
+            health: 98,
+            thumb: incomingAsset.img,
+            image: incomingAsset.img,
+            workstations: "Flexible",
+            color: "green"
+        };
+        
+        // Add to list transiently for viewing
+        setAssets(prev => [adaptedAsset, ...prev]);
+        setSelectedAsset(adaptedAsset);
+        
+        if (onAssetLoaded) onAssetLoaded();
+    }
+  }, [incomingAsset, onAssetLoaded]);
 
   const toggleIot = (device: keyof typeof iotStates) => {
     setIotStates(prev => ({ ...prev, [device]: !prev[device] }));
@@ -81,8 +108,8 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal 
     setSearchQuery(searchInput);
   };
 
-  // Combined filtering logic (simplified for demo)
-  const filteredAssets = ASSETS.filter(asset => {
+  // Combined filtering logic
+  const filteredAssets = assets.filter(asset => {
     const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           asset.locationCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           asset.name.toLowerCase().includes(aiPrompt.toLowerCase());

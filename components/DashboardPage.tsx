@@ -26,6 +26,9 @@ const DashboardPage: React.FC = () => {
   const [isPersonalCenterOpen, setIsPersonalCenterOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  
+  // State to pass asset data from Home to Digital Twins
+  const [incomingAsset, setIncomingAsset] = useState<any>(null);
 
   useEffect(() => {
     const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -49,6 +52,11 @@ const DashboardPage: React.FC = () => {
         return ['home', 'digital-twins', 'orders', 'messages', 'my-contracts'].includes(view);
     }
     return false;
+  };
+
+  const handleAssetSelect = (asset: any) => {
+    setIncomingAsset(asset);
+    setCurrentView('digital-twins');
   };
 
   // Helper to check if a section header should be shown
@@ -216,7 +224,11 @@ const DashboardPage: React.FC = () => {
       <main className="flex-1 flex overflow-hidden bg-slate-50">
         
         {currentView === 'home' && canAccess('home') && (
-           <HomeView onNavigate={setCurrentView} onOpenContractModal={() => setIsContractModalOpen(true)} />
+           <HomeView 
+             onNavigate={setCurrentView} 
+             onOpenContractModal={() => setIsContractModalOpen(true)} 
+             onAssetSelect={handleAssetSelect}
+           />
         )}
 
         {currentView === 'merchants' && canAccess('merchants') && (
@@ -229,7 +241,11 @@ const DashboardPage: React.FC = () => {
 
         {currentView === 'digital-twins' && canAccess('digital-twins') && (
            <div className="flex-1 flex flex-row overflow-hidden h-full">
-                <DigitalTwinsView onOpenBookingModal={() => setIsBookingModalOpen(true)} />
+                <DigitalTwinsView 
+                    onOpenBookingModal={() => setIsBookingModalOpen(true)} 
+                    incomingAsset={incomingAsset}
+                    onAssetLoaded={() => setIncomingAsset(null)}
+                />
            </div>
         )}
         

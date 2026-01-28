@@ -151,9 +151,10 @@ const ALL_RECOMMENDED_PROPERTIES = [
 interface HomeViewProps {
   onNavigate: (view: any) => void;
   onOpenContractModal: () => void;
+  onAssetSelect: (asset: any) => void;
 }
 
-const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal }) => {
+const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal, onAssetSelect }) => {
   const [homeSearchQuery, setHomeSearchQuery] = useState('');
   const [recommendationBatch, setRecommendationBatch] = useState(0);
   const ITEMS_PER_BATCH = 12;
@@ -303,7 +304,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal }) 
             {getCurrentBatch().map((item, index) => (
                 <div 
                     key={`${recommendationBatch}-${index}`}
-                    onClick={onOpenContractModal}
+                    onClick={() => onAssetSelect(item)}
                     className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-all cursor-pointer animate-[fadeIn_0.5s_ease-out]"
                 >
                     <div className="h-48 bg-cover bg-center relative transition-transform duration-500 hover:scale-105" style={{backgroundImage: `url("${item.img}")`}}>
@@ -320,7 +321,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal }) 
                             <span className="material-symbols-outlined text-[14px]">location_on</span> {item.loc}
                         </p>
                         <div className="flex justify-between items-center text-sm font-medium text-slate-700 dark:text-slate-300 border-t border-slate-100 dark:border-slate-700 pt-3">
-                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px] text-slate-400">square_foot</span> {item.area}</span>
+                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">text_snippet</span> {item.area} sqft</span>
                             <span className="font-bold text-slate-900 dark:text-white">{item.price}<span className="text-xs font-normal text-slate-400">/sqft</span></span>
                         </div>
                     </div>
