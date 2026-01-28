@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import BookingModal from './BookingModal';
 import PersonalCenterModal from './PersonalCenterModal';
 import SettingsModal from './SettingsModal';
 import ContractPreviewModal from './ContractPreviewModal';
+import NotificationButton from './NotificationButton';
 
 type ViewType = 'home' | 'digital-twins' | 'auto-ingestion' | 'auto-negotiation' | 'smart-contracts' | 'service-integration' | 'orders';
 
@@ -22,6 +23,10 @@ const DashboardPage: React.FC = () => {
     blinds: false,
   });
 
+  // State for Digital Twin Viewer
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const digitalTwinRef = useRef<HTMLElement>(null);
+
   // State for Auto-Ingestion
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([
@@ -38,6 +43,26 @@ const DashboardPage: React.FC = () => {
     if (homeSearchQuery.trim()) {
       alert(`Generating results for: ${homeSearchQuery}`);
       // In a real app, this would trigger navigation or API call
+    }
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.25, 3)); // Max zoom 3x
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.25, 1)); // Min zoom 1x
+  };
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      digitalTwinRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
     }
   };
 
@@ -387,8 +412,14 @@ const DashboardPage: React.FC = () => {
                 </div>
               </header>
 
-              <section className="w-full aspect-[21/9] min-h-[300px] bg-slate-900 rounded-2xl mb-8 relative group overflow-hidden border border-slate-300 shadow-lg shadow-slate-200/50">
-                <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBF37S8p1faGRX8BiWB27EzDpJhdr7sPuES7ntT7JC4rAqW7oJd20oxdnCvJ4zsTbJiWYbobRmf_hr9eD9OUSz6PIoHFW3pjPpmuqW52LjnebE4Eyy8cPA4CnLshbYJGiKwWkRR8hUc1tqiAOQfl-JnxGDVzO68c7Y_ytm9DxYVCRs904HfoxvvxlhfRPV37b2jzbIUidd5YGILsdiDpfvhTobgDq6G9zh5pRp9-TJ3asa4tpvPMLnnBog_2WAMtpIYBvw780yVXRgT")'}}></div>
+              <section ref={digitalTwinRef} className="w-full aspect-[21/9] min-h-[300px] bg-slate-900 rounded-2xl mb-8 relative group overflow-hidden border border-slate-300 shadow-lg shadow-slate-200/50">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out" 
+                  style={{
+                    backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBF37S8p1faGRX8BiWB27EzDpJhdr7sPuES7ntT7JC4rAqW7oJd20oxdnCvJ4zsTbJiWYbobRmf_hr9eD9OUSz6PIoHFW3pjPpmuqW52LjnebE4Eyy8cPA4CnLshbYJGiKwWkRR8hUc1tqiAOQfl-JnxGDVzO68c7Y_ytm9DxYVCRs904HfoxvvxlhfRPV37b2jzbIUidd5YGILsdiDpfvhTobgDq6G9zh5pRp9-TJ3asa4tpvPMLnnBog_2WAMtpIYBvw780yVXRgT")',
+                    transform: `scale(${zoomLevel})`
+                  }}
+                ></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none"></div>
                 <div className="absolute top-6 left-6 flex items-center gap-3 pointer-events-auto">
                   <span className="bg-white/90 backdrop-blur-md text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full border border-white/50 flex items-center gap-2 shadow-sm">
@@ -411,13 +442,22 @@ const DashboardPage: React.FC = () => {
                 </div>
                 
                 <div className="absolute bottom-6 right-6 flex items-center gap-2 pointer-events-auto">
-                  <button className="size-9 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all shadow-sm">
+                  <button 
+                    onClick={handleZoomIn}
+                    className="size-9 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all shadow-sm active:scale-95"
+                  >
                     <span className="material-symbols-outlined text-[20px]">zoom_in</span>
                   </button>
-                  <button className="size-9 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all shadow-sm">
+                  <button 
+                    onClick={handleZoomOut}
+                    className="size-9 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all shadow-sm active:scale-95"
+                  >
                     <span className="material-symbols-outlined text-[20px]">zoom_out</span>
                   </button>
-                  <button className="size-9 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all shadow-sm">
+                  <button 
+                    onClick={handleFullscreen}
+                    className="size-9 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all shadow-sm active:scale-95"
+                  >
                     <span className="material-symbols-outlined text-[20px]">fullscreen</span>
                   </button>
                 </div>
@@ -584,10 +624,7 @@ const DashboardPage: React.FC = () => {
                         <button className="p-2 text-slate-400 hover:text-primary hover:bg-orange-50 rounded-lg transition-colors" onClick={() => alert("Toggle theme")}>
                             <span className="material-symbols-outlined text-[20px]">dark_mode</span>
                         </button>
-                        <button className="relative p-2 text-slate-400 hover:text-primary hover:bg-orange-50 rounded-lg transition-colors" onClick={() => alert("Notifications")}>
-                            <span className="material-symbols-outlined text-[20px]">notifications</span>
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
+                        <NotificationButton />
                     </div>
                 </header>
 
@@ -777,12 +814,7 @@ const DashboardPage: React.FC = () => {
                         <span className="font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md">Auto-Negotiation</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button 
-                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                            onClick={() => alert("Notifications")}
-                        >
-                            <span className="material-symbols-outlined">notifications</span>
-                        </button>
+                        <NotificationButton />
                         <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                         <button 
                             className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
@@ -1110,10 +1142,7 @@ const DashboardPage: React.FC = () => {
                     <input className="block w-64 rounded-full border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 py-2 pl-10 pr-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-primary/20 placeholder:text-slate-400 transition-all" placeholder="Search contracts, hash, or tags..." type="text"/>
                   </div>
                   <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                  <button className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" onClick={() => alert('Notifications clicked')}>
-                    <span className="material-symbols-outlined text-[22px]">notifications</span>
-                    <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-white dark:border-slate-800"></span>
-                  </button>
+                  <NotificationButton />
                   <button className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" onClick={() => setIsSettingsModalOpen(true)}>
                     <span className="material-symbols-outlined text-[22px]">settings</span>
                   </button>
@@ -1722,13 +1751,7 @@ const DashboardPage: React.FC = () => {
                             <span className="material-symbols-outlined text-[20px]">dark_mode</span>
                         </button>
                         <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-                        <button 
-                            className="size-9 flex items-center justify-center text-slate-400 hover:text-primary transition-colors rounded-full hover:bg-slate-50 dark:hover:bg-slate-700 relative"
-                            onClick={() => alert("Notifications")}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">notifications</span>
-                            <span className="absolute top-2 right-2.5 w-2 h-2 bg-primary rounded-full border border-white dark:border-slate-800"></span>
-                        </button>
+                        <NotificationButton />
                     </div>
                 </header>
 

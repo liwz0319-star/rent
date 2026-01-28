@@ -46,10 +46,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigateToSignup, onLoginSucces
         <div className="absolute inset-0 bg-gradient-to-b from-sky-400/20 via-transparent to-black/60"></div>
         <div className="relative z-10 w-full h-full flex flex-col justify-between p-12">
           <div>
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-xs font-medium mb-6 shadow-lg">
-              <span className="material-icons text-sm mr-1 text-primary">auto_awesome</span>
-              Powered by AssetAI™ Engine
-            </div>
+            {/* Badge removed */}
           </div>
           <div className="mb-12">
             <h1 className="text-5xl font-display font-bold text-white mb-6 leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
