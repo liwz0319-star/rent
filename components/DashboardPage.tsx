@@ -1258,7 +1258,7 @@ const DashboardPage: React.FC = () => {
                               </span>
                             </td>
                             <td className="py-4 px-6 text-right">
-                              <button className="text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium text-sm p-1" onClick={() => alert('View clicked')}>
+                              <button className="text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium text-sm p-1" onClick={() => setIsContractModalOpen(true)}>
                                 <span className="material-symbols-outlined text-[20px]">visibility</span>
                               </button>
                             </td>
@@ -1286,7 +1286,7 @@ const DashboardPage: React.FC = () => {
                               </span>
                             </td>
                             <td className="py-4 px-6 text-right">
-                              <button className="text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium text-sm p-1" onClick={() => alert('View clicked')}>
+                              <button className="text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium text-sm p-1" onClick={() => setIsContractModalOpen(true)}>
                                 <span className="material-symbols-outlined text-[20px]">visibility</span>
                               </button>
                             </td>
