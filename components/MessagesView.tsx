@@ -121,10 +121,6 @@ const MessagesView: React.FC = () => {
             </div>
             <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 mr-2">
-            <button className="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-600 text-slate-900 dark:text-gray-200 text-sm font-medium hover:bg-slate-50 dark:hover:bg-[#2d2d2d] transition-colors flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">description</span>
-                                    View Contract
-                                </button>
             <button className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">handshake</span>
                                     Initiate Negotiation

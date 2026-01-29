@@ -2,9 +2,10 @@ import React from 'react';
 
 interface PaymentModalProps {
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ onClose }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ onClose, onSuccess }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 font-display" role="dialog" aria-modal="true">
       {/* Backdrop */}
@@ -80,12 +81,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose }) => {
                         <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#fd7712] peer-checked:bg-[#fd7712] relative flex items-center justify-center transition-colors">
                             <div className="w-2 h-2 bg-white rounded-full opacity-0 peer-checked:opacity-100"></div>
                         </div>
-                        {/* Active Border Highlight */}
-                        <div className="absolute inset-0 border-2 border-[#fd7712] rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
+                        {/* Active Border & Background Highlight */}
+                        <div className="absolute inset-0 border-2 border-[#fd7712] bg-[#fd7712]/5 rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
                     </label>
 
-                    {/* Option 2: Credit Card (Selected) */}
-                    <label className="relative flex items-center justify-between p-4 rounded-xl border border-[#fd7712] bg-[#fd7712]/5 cursor-pointer transition-all group">
+                    {/* Option 2: Credit Card */}
+                    <label className="relative flex items-center justify-between p-4 rounded-xl border border-[#e7e0da] cursor-pointer hover:border-[#fd7712]/50 hover:bg-[#f8f7f5]/50 transition-all group">
                         <input defaultChecked className="peer sr-only" name="payment_method" type="radio" value="card"/>
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-white text-gray-800 flex items-center justify-center border border-gray-100 shadow-sm">
@@ -96,11 +97,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose }) => {
                                 <p className="text-xs text-[#8d725e]">Visa ending in 4242</p>
                             </div>
                         </div>
-                        <div className="w-5 h-5 rounded-full border-2 border-[#fd7712] bg-[#fd7712] relative flex items-center justify-center transition-colors">
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#fd7712] peer-checked:bg-[#fd7712] relative flex items-center justify-center transition-colors">
+                            <div className="w-2 h-2 bg-white rounded-full opacity-0 peer-checked:opacity-100"></div>
                         </div>
-                        {/* Active Border Highlight */}
-                        <div className="absolute inset-0 border-2 border-[#fd7712] rounded-xl pointer-events-none"></div>
+                        {/* Active Border & Background Highlight */}
+                        <div className="absolute inset-0 border-2 border-[#fd7712] bg-[#fd7712]/5 rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
                     </label>
 
                     {/* Option 3: WeChat Pay */}
@@ -118,8 +119,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose }) => {
                         <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#fd7712] peer-checked:bg-[#fd7712] relative flex items-center justify-center transition-colors">
                             <div className="w-2 h-2 bg-white rounded-full opacity-0 peer-checked:opacity-100"></div>
                         </div>
-                        {/* Active Border Highlight */}
-                        <div className="absolute inset-0 border-2 border-[#fd7712] rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
+                        {/* Active Border & Background Highlight */}
+                        <div className="absolute inset-0 border-2 border-[#fd7712] bg-[#fd7712]/5 rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
                     </label>
 
                     {/* Option 4: Alipay */}
@@ -137,8 +138,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose }) => {
                         <div className="w-5 h-5 rounded-full border-2 border-gray-300 peer-checked:border-[#fd7712] peer-checked:bg-[#fd7712] relative flex items-center justify-center transition-colors">
                             <div className="w-2 h-2 bg-white rounded-full opacity-0 peer-checked:opacity-100"></div>
                         </div>
-                        {/* Active Border Highlight */}
-                        <div className="absolute inset-0 border-2 border-[#fd7712] rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
+                        {/* Active Border & Background Highlight */}
+                        <div className="absolute inset-0 border-2 border-[#fd7712] bg-[#fd7712]/5 rounded-xl opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></div>
                     </label>
                 </div>
             </div>
@@ -154,8 +155,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ onClose }) => {
             {/* Pay Button */}
             <button 
                 onClick={() => {
-                    alert("Payment successful!");
-                    onClose();
+                    if (onSuccess) {
+                        onSuccess();
+                    } else {
+                        onClose();
+                    }
                 }}
                 className="w-full bg-[#fd7712] hover:bg-[#e0660b] text-white font-bold text-base h-12 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 group"
             >

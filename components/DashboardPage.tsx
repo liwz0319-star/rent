@@ -2,33 +2,41 @@ import React, { useState, useEffect } from 'react';
 import BookingModal from './BookingModal';
 import PersonalCenterModal from './PersonalCenterModal';
 import SettingsModal from './SettingsModal';
-import ContractPreviewModal from './ContractPreviewModal';
-import NotificationButton from './NotificationButton';
+import PaymentModal from './PaymentModal';
+import PaymentSuccessModal from './PaymentSuccessModal';
 import HomeView from './HomeView';
 import DigitalTwinsView from './DigitalTwinsView';
 import AutoIngestionView from './AutoIngestionView';
-import AutoNegotiationView from './AutoNegotiationView';
-import SmartContractsView from './SmartContractsView';
 import ServiceIntegrationView from './ServiceIntegrationView';
+import UserServiceIntegrationView from './UserServiceIntegrationView';
 import OrdersView from './OrdersView';
 import MerchantsView from './MerchantsView';
 import MerchantAnalyticsView from './MerchantAnalyticsView';
 import MessagesView from './MessagesView';
-import MyContractsView from './MyContractsView';
+import MyFavoritesView from './MyFavoritesView';
 
-type ViewType = 'home' | 'merchants' | 'merchant-analytics' | 'digital-twins' | 'auto-ingestion' | 'auto-negotiation' | 'smart-contracts' | 'service-integration' | 'orders' | 'messages' | 'my-contracts';
+type ViewType = 'home' | 'merchants' | 'merchant-analytics' | 'digital-twins' | 'auto-ingestion' | 'service-integration' | 'orders' | 'messages' | 'my-favorites';
 export type UserRole = 'Admin' | 'Merchant' | 'User';
 
 const DashboardPage: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewType>('home');
+  const [currentView, setCurrentView] = useState<ViewType>('merchants'); // Default to merchants for Admin
   const [userRole, setUserRole] = useState<UserRole>('Admin');
+  
+  // Modals State
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isPersonalCenterOpen, setIsPersonalCenterOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentSuccessModalOpen, setIsPaymentSuccessModalOpen] = useState(false);
   
   // State to pass asset data from Home to Digital Twins
   const [incomingAsset, setIncomingAsset] = useState<any>(null);
+  
+  // State to pass batch assets from Auto-Ingestion to Digital Twins
+  const [syncedAssets, setSyncedAssets] = useState<any[]>([]);
+
+  // Favorites State
+  const [favorites, setFavorites] = useState<any[]>([]);
 
   useEffect(() => {
     const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -41,15 +49,18 @@ const DashboardPage: React.FC = () => {
 
   // Permission Logic
   const canAccess = (view: ViewType) => {
-    if (userRole === 'Admin') return true;
+    if (userRole === 'Admin') {
+        // Admin sees everything EXCEPT Home and Favorites
+        return !['home', 'my-favorites'].includes(view);
+    }
     if (userRole === 'Merchant') {
-        // Merchants can access everything except Service Integration (System level)
+        // Merchants can access everything except Service Integration (System level), Home, and Favorites
         // Merchants cannot access the 'merchants' view as it is for admin management
-        return ['home', 'digital-twins', 'auto-ingestion', 'auto-negotiation', 'smart-contracts', 'orders', 'merchant-analytics', 'messages'].includes(view);
+        return ['digital-twins', 'auto-ingestion', 'orders', 'merchant-analytics', 'messages'].includes(view);
     }
     if (userRole === 'User') {
-        // Users can only view Home, Assets (Digital Twins), their Orders, Messages, and My Contracts
-        return ['home', 'digital-twins', 'orders', 'messages', 'my-contracts'].includes(view);
+        // Users can only view Home, Assets (Digital Twins), their Orders, Messages, Favorites, and Service Integration
+        return ['home', 'digital-twins', 'orders', 'messages', 'my-favorites', 'service-integration'].includes(view);
     }
     return false;
   };
@@ -59,9 +70,36 @@ const DashboardPage: React.FC = () => {
     setCurrentView('digital-twins');
   };
 
+  const handleSyncAssets = (assets: any[]) => {
+    setSyncedAssets(assets);
+    setCurrentView('digital-twins');
+  };
+
+  const handleToggleFavorite = (item: any) => {
+    setFavorites(prev => {
+      const exists = prev.find(f => f.title === item.title);
+      if (exists) {
+        return prev.filter(f => f.title !== item.title);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+
+  const handleBookingConfirm = () => {
+    setIsBookingModalOpen(false);
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    setIsPaymentSuccessModalOpen(true);
+  };
+
   // Helper to check if a section header should be shown
-  const showAssetPerception = canAccess('digital-twins') || canAccess('auto-ingestion') || canAccess('auto-negotiation');
-  const showOps = canAccess('smart-contracts') || canAccess('service-integration') || canAccess('orders');
+  // We hide Digital Twins from sidebar for Users, so we must exclude it from the header check for Users
+  const showAssetPerception = (canAccess('digital-twins') && userRole !== 'User') || canAccess('auto-ingestion');
+  const showOps = canAccess('service-integration') || canAccess('orders');
 
   return (
     <div className="bg-slate-50 text-slate-900 font-display overflow-hidden h-screen flex">
@@ -79,22 +117,29 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
           <nav className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-200px)] no-scrollbar">
-            <div 
-              onClick={() => setCurrentView('home')}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'home' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-            >
-              <span className={`material-symbols-outlined text-[20px] ${currentView === 'home' ? 'fill-1' : ''}`}>home</span>
-              <p className={`text-sm ${currentView === 'home' ? 'font-bold' : 'font-medium'}`}>Home</p>
-            </div>
+            {canAccess('home') && (
+                <div 
+                onClick={() => setCurrentView('home')}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'home' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
+                >
+                <span className={`material-symbols-outlined text-[20px] ${currentView === 'home' ? 'fill-1' : ''}`}>home</span>
+                <p className={`text-sm ${currentView === 'home' ? 'font-bold' : 'font-medium'}`}>Home</p>
+                </div>
+            )}
 
-            {canAccess('my-contracts') && (
-              <div 
-                onClick={() => setCurrentView('my-contracts')}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'my-contracts' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-              >
-                <span className={`material-symbols-outlined text-[20px] ${currentView === 'my-contracts' ? 'fill-1' : ''}`}>description</span>
-                <p className={`text-sm ${currentView === 'my-contracts' ? 'font-bold' : 'font-medium'}`}>My Contracts</p>
-              </div>
+            {/* My Library Section for Users (Favorites) */}
+            {canAccess('my-favorites') && (
+                <>
+                    <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">My Library</p>
+                    
+                    <div 
+                        onClick={() => setCurrentView('my-favorites')}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'my-favorites' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
+                    >
+                        <span className={`material-symbols-outlined text-[20px] ${currentView === 'my-favorites' ? 'fill-1' : ''}`}>favorite</span>
+                        <p className={`text-sm ${currentView === 'my-favorites' ? 'font-bold' : 'font-medium'}`}>Favorites</p>
+                    </div>
+                </>
             )}
 
             {canAccess('merchants') && (
@@ -121,7 +166,7 @@ const DashboardPage: React.FC = () => {
                 <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">Asset Perception</p>
             )}
             
-            {canAccess('digital-twins') && (
+            {canAccess('digital-twins') && userRole !== 'User' && (
                 <div 
                 onClick={() => setCurrentView('digital-twins')}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'digital-twins' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
@@ -138,16 +183,6 @@ const DashboardPage: React.FC = () => {
                 >
                 <span className={`material-symbols-outlined text-[20px] ${currentView === 'auto-ingestion' ? 'fill-1' : ''}`}>cloud_upload</span>
                 <p className={`text-sm ${currentView === 'auto-ingestion' ? 'font-bold' : 'font-medium'}`}>Auto-Ingestion</p>
-                </div>
-            )}
-
-            {canAccess('auto-negotiation') && (
-                <div 
-                onClick={() => setCurrentView('auto-negotiation')}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'auto-negotiation' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-                >
-                <span className={`material-symbols-outlined text-[20px] ${currentView === 'auto-negotiation' ? 'fill-1' : ''}`}>handshake</span>
-                <p className={`text-sm ${currentView === 'auto-negotiation' ? 'font-bold' : 'font-medium'}`}>Auto-Negotiation</p>
                 </div>
             )}
             
@@ -175,15 +210,6 @@ const DashboardPage: React.FC = () => {
                 </div>
             )}
 
-            {canAccess('smart-contracts') && (
-                <div 
-                onClick={() => setCurrentView('smart-contracts')}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'smart-contracts' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-                >
-                <span className={`material-symbols-outlined text-[20px] ${currentView === 'smart-contracts' ? 'fill-1' : ''}`}>gavel</span>
-                <p className={`text-sm ${currentView === 'smart-contracts' ? 'font-bold' : 'font-medium'}`}>Smart Contracts</p>
-                </div>
-            )}
             {canAccess('service-integration') && (
                 <div 
                 onClick={() => setCurrentView('service-integration')}
@@ -226,9 +252,18 @@ const DashboardPage: React.FC = () => {
         {currentView === 'home' && canAccess('home') && (
            <HomeView 
              onNavigate={setCurrentView} 
-             onOpenContractModal={() => setIsContractModalOpen(true)} 
              onAssetSelect={handleAssetSelect}
+             favorites={favorites}
+             onToggleFavorite={handleToggleFavorite}
            />
+        )}
+
+        {currentView === 'my-favorites' && canAccess('my-favorites') && (
+            <MyFavoritesView 
+                favorites={favorites}
+                onToggleFavorite={handleToggleFavorite}
+                onNavigate={setCurrentView}
+            />
         )}
 
         {currentView === 'merchants' && canAccess('merchants') && (
@@ -245,28 +280,27 @@ const DashboardPage: React.FC = () => {
                     onOpenBookingModal={() => setIsBookingModalOpen(true)} 
                     incomingAsset={incomingAsset}
                     onAssetLoaded={() => setIncomingAsset(null)}
+                    batchAssets={syncedAssets}
+                    onAssetsConsumed={() => setSyncedAssets([])}
+                    userRole={userRole}
+                    favorites={favorites}
+                    onToggleFavorite={handleToggleFavorite}
                 />
            </div>
         )}
         
         {currentView === 'auto-ingestion' && canAccess('auto-ingestion') && (
-            <AutoIngestionView onNavigate={setCurrentView} />
-        )}
-
-        {currentView === 'auto-negotiation' && canAccess('auto-negotiation') && (
-            <AutoNegotiationView onNavigate={setCurrentView} />
-        )}
-
-        {currentView === 'smart-contracts' && canAccess('smart-contracts') && (
-            <SmartContractsView 
+            <AutoIngestionView 
                 onNavigate={setCurrentView} 
-                onOpenContractModal={() => setIsContractModalOpen(true)} 
-                onOpenSettingsModal={() => setIsSettingsModalOpen(true)} 
+                onSyncAssets={handleSyncAssets}
             />
         )}
 
         {currentView === 'service-integration' && canAccess('service-integration') && (
-            <ServiceIntegrationView />
+            // Conditionally render based on role: User sees the service portal, Admin sees the system view
+            userRole === 'User' 
+                ? <UserServiceIntegrationView /> 
+                : <ServiceIntegrationView onRequestService={() => setIsBookingModalOpen(true)} />
         )}
 
         {currentView === 'orders' && canAccess('orders') && (
@@ -277,10 +311,6 @@ const DashboardPage: React.FC = () => {
             <MessagesView />
         )}
 
-        {currentView === 'my-contracts' && canAccess('my-contracts') && (
-            <MyContractsView />
-        )}
-
         {/* Fallback for restricted views or dev placeholders */}
         {!canAccess(currentView) && (
             <div className="flex-1 flex items-center justify-center bg-slate-50">
@@ -288,12 +318,34 @@ const DashboardPage: React.FC = () => {
                     <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">lock</span>
                     <h3 className="text-xl font-bold text-slate-700">Access Restricted</h3>
                     <p className="text-slate-500 mt-2">You do not have permission to view this page as a {userRole}.</p>
-                    <button 
-                        onClick={() => setCurrentView('home')}
-                        className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors"
-                    >
-                        Go Home
-                    </button>
+                    {/* Only show 'Go Home' if they actually have access to home, otherwise show something else */}
+                    {canAccess('home') ? (
+                        <button 
+                            onClick={() => setCurrentView('home')}
+                            className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors"
+                        >
+                            Go Home
+                        </button>
+                    ) : (
+                        <div className="mt-4 flex gap-3 justify-center">
+                            {canAccess('merchants') && (
+                                <button 
+                                    onClick={() => setCurrentView('merchants')}
+                                    className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors"
+                                >
+                                    Go to Merchants
+                                </button>
+                            )}
+                            {canAccess('merchant-analytics') && (
+                                <button 
+                                    onClick={() => setCurrentView('merchant-analytics')}
+                                    className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                                >
+                                    Analytics
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         )}
@@ -303,10 +355,18 @@ const DashboardPage: React.FC = () => {
       {isBookingModalOpen && (
         <BookingModal 
           onClose={() => setIsBookingModalOpen(false)} 
-          onConfirm={() => {
-            alert('Meeting booked successfully!');
-            setIsBookingModalOpen(false);
-          }}
+          onConfirm={handleBookingConfirm}
+        />
+      )}
+      {isPaymentModalOpen && (
+        <PaymentModal 
+            onClose={() => setIsPaymentModalOpen(false)}
+            onSuccess={handlePaymentSuccess}
+        />
+      )}
+      {isPaymentSuccessModalOpen && (
+        <PaymentSuccessModal
+            onClose={() => setIsPaymentSuccessModalOpen(false)}
         />
       )}
       {isPersonalCenterOpen && (
@@ -315,10 +375,12 @@ const DashboardPage: React.FC = () => {
             userRole={userRole}
             onRoleChange={(role) => {
                 setUserRole(role);
-                // Reset to home if current view becomes inaccessible
-                if (role === 'User' && !['home', 'digital-twins', 'orders', 'messages', 'my-contracts'].includes(currentView)) {
-                    setCurrentView('home');
-                } else if (role === 'Merchant' && (currentView === 'service-integration' || currentView === 'merchants')) {
+                // Smart redirect based on new role to ensure they land on a valid page
+                if (role === 'Admin') {
+                    setCurrentView('merchants');
+                } else if (role === 'Merchant') {
+                    setCurrentView('merchant-analytics');
+                } else if (role === 'User') {
                     setCurrentView('home');
                 }
             }}
@@ -326,9 +388,6 @@ const DashboardPage: React.FC = () => {
       )}
       {isSettingsModalOpen && (
         <SettingsModal onClose={() => setIsSettingsModalOpen(false)} />
-      )}
-      {isContractModalOpen && (
-        <ContractPreviewModal onClose={() => setIsContractModalOpen(false)} />
       )}
     </div>
   );

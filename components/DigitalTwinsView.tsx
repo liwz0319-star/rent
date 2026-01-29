@@ -4,12 +4,18 @@ interface DigitalTwinsViewProps {
   onOpenBookingModal: () => void;
   incomingAsset?: any;
   onAssetLoaded?: () => void;
+  batchAssets?: any[];
+  onAssetsConsumed?: () => void;
+  userRole: 'Admin' | 'Merchant' | 'User';
+  favorites?: any[];
+  onToggleFavorite?: (item: any) => void;
 }
 
 const DEFAULT_ASSETS = [
   {
     id: 1,
     name: "North Tower - Suite 501",
+    owner: "Apex Workspaces",
     locationCode: "L05",
     status: "Available",
     area: "1250 sqm",
@@ -22,6 +28,7 @@ const DEFAULT_ASSETS = [
   {
     id: 2,
     name: "East Wing - Conf Room B",
+    owner: "Downtown Hub",
     locationCode: "L02",
     status: "Occupied",
     area: "450 sqm",
@@ -30,17 +37,52 @@ const DEFAULT_ASSETS = [
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBFD6LHgI5Xrot3lnWPSkQeXX5sj_y4vLSEh4Q7JZfrD23XXEmVa3DtqAV5P4k5Nu7tBa8yRxSN0NNWDLwSN_LVSQ12Db9Tqz6V_5xjyD22tR8_spnBNkZQrziYl1jFWK1LM-xyQxxytPgopvMJTrMTjR6g4ls6b8ptMMOueqJ0zHH0cftfca1QG96pOddDXLXf_SUpVDKhEOCorC8pUfmXt6nSeKd0xSxq-b-YlOtXKFjsHUw5e2Su39TVWaHJhePSodefB6TW8VwA",
     workstations: "12 units",
     color: "orange"
+  },
+  {
+    id: 3,
+    name: "Skyline - Exec Office",
+    owner: "Apex Workspaces",
+    locationCode: "L08",
+    status: "Maintenance",
+    area: "800 sqm",
+    health: 78,
+    thumb: "https://lh3.googleusercontent.com/aida-public/AB6AXuBcHSyWgwbCoOTk_0VZstE6XsIoRLVjJemfVpxpsgeT6zDCxeasoeNn_jS_82T72VHeJ0TA6erwgdOhqT8sDiiYs_wHeWfNOyMr9BEHlxWcCTwY2REOYvbiebLTfw2FLCHn_RhvAIqbPvHjjyJZIKzuZgxREjuitiPj5a16fFRBpBDXA2d59dOO6nHEumKYgsAMPykzmg5iNtgvDSc4C7ESnRNw5TFc4UPVYUaZQ9T-uIxxPHOBg4x8AGrtD4_mma4rwkgotEIXAxfZ",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBcHSyWgwbCoOTk_0VZstE6XsIoRLVjJemfVpxpsgeT6zDCxeasoeNn_jS_82T72VHeJ0TA6erwgdOhqT8sDiiYs_wHeWfNOyMr9BEHlxWcCTwY2REOYvbiebLTfw2FLCHn_RhvAIqbPvHjjyJZIKzuZgxREjuitiPj5a16fFRBpBDXA2d59dOO6nHEumKYgsAMPykzmg5iNtgvDSc4C7ESnRNw5TFc4UPVYUaZQ9T-uIxxPHOBg4x8AGrtD4_mma4rwkgotEIXAxfZ",
+    workstations: "20 units",
+    color: "orange"
+  },
+  {
+    id: 4,
+    name: "Harbor View - Hall A",
+    owner: "Downtown Hub",
+    locationCode: "L01",
+    status: "Available",
+    area: "2000 sqm",
+    health: 99,
+    thumb: "https://lh3.googleusercontent.com/aida-public/AB6AXuDqsJvbSqeYubzb-Bm5vL5KBdJjvPATZeYbuyQcW6jsGf8XJ_nlZjXjftc4mG05q_hPSEW2Z1i71KoLzkslSPHz0vhuq6NuFHcfxUFZBsIk4Uj4g-Zt2zU_Zefxi9EV4u4kfUjXpx1fRupyoMUooAAOHgcUN8wxOqVPZuThXXFS2AD0BMp7hAh3X18CMsitxtiFs05haB62HmznKPb5N3p_25Wqk6f-A-TNgTfN93g0P0WMki9pT4AJitkGcFLK73AERqD_E6UCRGdX",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDqsJvbSqeYubzb-Bm5vL5KBdJjvPATZeYbuyQcW6jsGf8XJ_nlZjXjftc4mG05q_hPSEW2Z1i71KoLzkslSPHz0vhuq6NuFHcfxUFZBsIk4Uj4g-Zt2zU_Zefxi9EV4u4kfUjXpx1fRupyoMUooAAOHgcUN8wxOqVPZuThXXFS2AD0BMp7hAh3X18CMsitxtiFs05haB62HmznKPb5N3p_25Wqk6f-A-TNgTfN93g0P0WMki9pT4AJitkGcFLK73AERqD_E6UCRGdX",
+    workstations: "80 units",
+    color: "green"
   }
 ];
 
-const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal, incomingAsset, onAssetLoaded }) => {
+const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ 
+    onOpenBookingModal, 
+    incomingAsset, 
+    onAssetLoaded, 
+    batchAssets, 
+    onAssetsConsumed, 
+    userRole, 
+    favorites, 
+    onToggleFavorite 
+}) => {
   const [assets, setAssets] = useState(DEFAULT_ASSETS);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
   
   // Advanced Filter State
   const [aiPrompt, setAiPrompt] = useState('');
-  const [filterAvailable, setFilterAvailable] = useState(true);
+  const [filterAvailable, setFilterAvailable] = useState(false); // Default false to show all initially
   const [filterVideo, setFilterVideo] = useState(false);
   const [filterWhiteboard, setFilterWhiteboard] = useState(false);
   const [filterCapacity, setFilterCapacity] = useState('Any Size');
@@ -56,12 +98,14 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
     blinds: false,
   });
 
+  // Handle single asset from Home
   useEffect(() => {
     if (incomingAsset) {
         // Adapt incoming asset from Home view to Digital Twin structure if it doesn't exist
         const adaptedAsset = {
             id: Date.now(), // Temporary unique ID for viewing
             name: incomingAsset.title,
+            owner: "Apex Workspaces", // Default for new incoming
             locationCode: incomingAsset.loc ? incomingAsset.loc.split(',')[0].substring(0, 3).toUpperCase() + '01' : 'TBD',
             status: "Available",
             area: incomingAsset.area ? `${incomingAsset.area} sqft` : "Unknown",
@@ -79,6 +123,14 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
         if (onAssetLoaded) onAssetLoaded();
     }
   }, [incomingAsset, onAssetLoaded]);
+
+  // Handle batch assets from Auto-Ingestion
+  useEffect(() => {
+    if (batchAssets && batchAssets.length > 0) {
+        setAssets(prev => [...batchAssets, ...prev]);
+        if (onAssetsConsumed) onAssetsConsumed();
+    }
+  }, [batchAssets, onAssetsConsumed]);
 
   const toggleIot = (device: keyof typeof iotStates) => {
     setIotStates(prev => ({ ...prev, [device]: !prev[device] }));
@@ -108,13 +160,24 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
     setSearchQuery(searchInput);
   };
 
+  const isFavorite = (asset: any) => {
+    return favorites?.some((fav: any) => fav.title === asset.name);
+  };
+
   // Combined filtering logic
   const filteredAssets = assets.filter(asset => {
+    // 1. Role-based filtering
+    // If Merchant, assume current user is "Apex Workspaces" for simulation
+    if (userRole === 'Merchant' && asset.owner !== 'Apex Workspaces') {
+        return false;
+    }
+    // Admin and User see everything (User is consumer, Admin is superuser)
+
+    // 2. Search & UI Filters
     const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           asset.locationCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           asset.name.toLowerCase().includes(aiPrompt.toLowerCase());
     
-    // Simulate availability filter
     const matchesAvailability = filterAvailable ? asset.status === 'Available' : true;
 
     return matchesSearch && matchesAvailability;
@@ -128,7 +191,7 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
                 <div className="max-w-7xl mx-auto flex flex-col gap-6">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 mb-2">Digital Twins Library</h1>
-                        <p className="text-slate-500">Real-time spatial data and IoT control center for enterprise assets.</p>
+                        <p className="text-slate-500">Real-time spatial data and IoT control center for {userRole === 'Merchant' ? 'your' : 'enterprise'} assets.</p>
                     </div>
                     
                     {/* Advanced AI Search & Filter Bar */}
@@ -253,7 +316,9 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
             {/* Grid */}
             <div className="flex-1 overflow-y-auto p-8">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredAssets.map(asset => (
+                    {filteredAssets.map(asset => {
+                        const isFav = isFavorite(asset);
+                        return (
                         <div 
                             key={asset.id}
                             onClick={() => setSelectedAsset(asset)}
@@ -261,17 +326,32 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
                         >
                             <div className="h-48 bg-slate-100 relative overflow-hidden">
                                 <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" style={{backgroundImage: `url('${asset.thumb}')`}}></div>
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
                                     <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border shadow-sm backdrop-blur-md ${asset.color === 'green' ? 'bg-white/90 text-green-700 border-green-200' : 'bg-white/90 text-orange-700 border-orange-200'}`}>
                                         {asset.status}
                                     </span>
                                 </div>
+                                {/* Favorite Button */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onToggleFavorite) onToggleFavorite({ ...asset, title: asset.name, img: asset.thumb, loc: asset.locationCode + ' - ' + asset.owner, price: 'Contact for Price' });
+                                    }}
+                                    className={`absolute top-3 right-3 p-1.5 backdrop-blur-md rounded-full transition-colors z-10 ${isFav ? 'bg-white text-primary' : 'bg-white/20 text-white hover:bg-white hover:text-red-500'}`}
+                                >
+                                    <span className="material-symbols-outlined text-[16px]" style={isFav ? {fontVariationSettings: "'FILL' 1"} : {}}>favorite_border</span>
+                                </button>
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
                                      <p className="text-white font-bold truncate text-lg shadow-black/50 drop-shadow-sm">{asset.name}</p>
                                      <p className="text-white/80 text-xs font-medium">{asset.locationCode}</p>
                                 </div>
                             </div>
                             <div className="p-5 flex flex-col gap-4 flex-1">
+                                {userRole === 'Admin' && (
+                                    <div className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded w-fit">
+                                        Owner: {asset.owner}
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-2 text-sm text-slate-600">
                                         <span className="material-symbols-outlined text-[18px] text-slate-400">crop_square</span>
@@ -294,14 +374,23 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    );})}
+                    {filteredAssets.length === 0 && (
+                        <div className="col-span-full py-20 text-center text-slate-400 flex flex-col items-center">
+                            <span className="material-symbols-outlined text-5xl mb-2 opacity-30">domain_disabled</span>
+                            <p className="text-lg font-medium">No assets found.</p>
+                            {userRole === 'Merchant' && <p className="text-sm">You haven't listed any assets matching the criteria.</p>}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
   }
 
-  // Split View
+  const isSelectedFav = selectedAsset ? isFavorite(selectedAsset) : false;
+
+  // Split View (When an asset is selected)
   return (
     <>
       <div className="w-80 flex flex-col border-r border-slate-200 bg-white z-10 shrink-0">
@@ -464,9 +553,24 @@ const DigitalTwinsView: React.FC<DigitalTwinsViewProps> = ({ onOpenBookingModal,
                 <span className="material-symbols-outlined text-[14px] text-slate-400">chevron_right</span>
                 <span className="text-slate-800 font-bold bg-slate-200/50 px-2 py-0.5 rounded">Suite {selectedAsset.locationCode === 'L05' ? '501' : '502'}</span>
               </nav>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{selectedAsset.name}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{selectedAsset.name}</h1>
+                {userRole === 'Admin' && (
+                    <span className="text-xs font-semibold text-white bg-slate-800 px-2 py-1 rounded">Owner: {selectedAsset.owner}</span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* Detail View Favorite Button */}
+              <button
+                onClick={() => {
+                    if (onToggleFavorite) onToggleFavorite({ ...selectedAsset, title: selectedAsset.name, img: selectedAsset.thumb, loc: selectedAsset.locationCode + ' - ' + selectedAsset.owner, price: 'Contact for Price' });
+                }}
+                className={`p-2 rounded-lg border transition-all ${isSelectedFav ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200'}`}
+              >
+                <span className="material-symbols-outlined text-[24px]" style={isSelectedFav ? {fontVariationSettings: "'FILL' 1"} : {}}>favorite</span>
+              </button>
+              
               <button className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white hover:bg-orange-600 transition-all font-semibold text-sm shadow-lg shadow-orange-500/20 active:translate-y-0.5" onClick={onOpenBookingModal}>
                 <span className="material-symbols-outlined text-[18px]">event_available</span>
                 Book Meeting

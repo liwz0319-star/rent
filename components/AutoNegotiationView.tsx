@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import NotificationButton from './NotificationButton';
 import AutoNegotiationParametersModal from './AutoNegotiationParametersModal';
 
 interface AutoNegotiationViewProps {
@@ -22,8 +21,6 @@ const AutoNegotiationView: React.FC<AutoNegotiationViewProps> = ({ onNavigate })
                 <span className="font-semibold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md">Auto-Negotiation</span>
             </div>
             <div className="flex items-center gap-3">
-                <NotificationButton />
-                <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                 <button 
                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
                     onClick={() => setIsParametersModalOpen(true)}

@@ -11,10 +11,6 @@ const MerchantAnalyticsView: React.FC = () => {
             <button className="px-3 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 rounded" onClick={() => alert("30 Days Selected")}>30 Days</button>
             <button className="px-3 py-1 text-xs font-medium text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 rounded" onClick={() => alert("Quarter Selected")}>Q3 2023</button>
           </div>
-          <button className="p-2 text-gray-400 hover:text-primary transition-colors relative" onClick={() => alert("Notifications")}>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
         </div>
       </header>
       

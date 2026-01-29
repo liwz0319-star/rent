@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import NotificationButton from './NotificationButton';
 import PaymentModal from './PaymentModal';
+import PaymentSuccessModal from './PaymentSuccessModal';
+import OrderDetailsModal from './OrderDetailsModal';
 
 // Mock Data
 const ALL_ORDERS = [
@@ -53,8 +54,15 @@ const ALL_ORDERS = [
 const OrdersView: React.FC = () => {
   const [activeOrderTab, setActiveOrderTab] = useState('All Orders');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentSuccessModalOpen, setIsPaymentSuccessModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    setIsPaymentSuccessModalOpen(true);
+  };
 
   // Filter Logic
   const filteredOrders = ALL_ORDERS.filter(order => {
@@ -68,24 +76,7 @@ const OrdersView: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-900 overflow-hidden">
-        {/* Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shrink-0 sticky top-0 z-20">
-            <div className="flex items-center gap-2 text-sm">
-                <span className="text-slate-400 font-bold text-[11px] tracking-widest uppercase">OPS & EXECUTION</span>
-                <span className="material-symbols-outlined text-slate-400 text-lg">chevron_right</span>
-                <span className="text-slate-900 dark:text-white font-bold">Orders</span>
-            </div>
-            <div className="flex items-center gap-3">
-                <button 
-                    className="size-9 flex items-center justify-center text-slate-400 hover:text-primary transition-colors rounded-full hover:bg-slate-50 dark:hover:bg-slate-700"
-                    onClick={() => alert("Toggle theme")}
-                >
-                    <span className="material-symbols-outlined text-[20px]">dark_mode</span>
-                </button>
-                <div className="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
-                <NotificationButton />
-            </div>
-        </header>
+        {/* Header Removed */}
 
         <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col max-w-[1200px] w-full mx-auto p-8 gap-6">
@@ -231,7 +222,7 @@ const OrdersView: React.FC = () => {
                                             {order.status === 'In Progress' ? 'Track' : 'Invoice'}
                                         </button>
                                     )}
-                                    <button onClick={() => alert("View Details")} className="flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-200 text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    <button onClick={() => setSelectedOrder(order)} className="flex-1 bg-white dark:bg-transparent border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-200 text-sm font-medium py-2 px-4 rounded-lg transition-colors">
                                         View Details
                                     </button>
                                 </div>
@@ -255,7 +246,23 @@ const OrdersView: React.FC = () => {
                 </div>
             </div>
         </div>
-        {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} />}
+        {isPaymentModalOpen && (
+            <PaymentModal 
+                onClose={() => setIsPaymentModalOpen(false)} 
+                onSuccess={handlePaymentSuccess}
+            />
+        )}
+        {isPaymentSuccessModalOpen && (
+            <PaymentSuccessModal 
+                onClose={() => setIsPaymentSuccessModalOpen(false)} 
+            />
+        )}
+        {selectedOrder && (
+            <OrderDetailsModal
+                order={selectedOrder}
+                onClose={() => setSelectedOrder(null)}
+            />
+        )}
     </div>
   );
 };

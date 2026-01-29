@@ -150,11 +150,12 @@ const ALL_RECOMMENDED_PROPERTIES = [
 
 interface HomeViewProps {
   onNavigate: (view: any) => void;
-  onOpenContractModal: () => void;
   onAssetSelect: (asset: any) => void;
+  favorites?: any[];
+  onToggleFavorite?: (item: any) => void;
 }
 
-const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal, onAssetSelect }) => {
+const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onAssetSelect, favorites = [], onToggleFavorite }) => {
   const [homeSearchQuery, setHomeSearchQuery] = useState('');
   const [recommendationBatch, setRecommendationBatch] = useState(0);
   const ITEMS_PER_BATCH = 12;
@@ -176,6 +177,10 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal, on
         batch.push(ALL_RECOMMENDED_PROPERTIES[(startIndex + i) % ALL_RECOMMENDED_PROPERTIES.length]);
     }
     return batch;
+  };
+
+  const isFavorite = (item: any) => {
+    return favorites.some(fav => fav.title === item.title);
   };
 
   return (
@@ -301,32 +306,41 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenContractModal, on
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {getCurrentBatch().map((item, index) => (
-                <div 
-                    key={`${recommendationBatch}-${index}`}
-                    onClick={() => onAssetSelect(item)}
-                    className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-all cursor-pointer animate-[fadeIn_0.5s_ease-out]"
-                >
-                    <div className="h-48 bg-cover bg-center relative transition-transform duration-500 hover:scale-105" style={{backgroundImage: `url("${item.img}")`}}>
-                        {item.badge && (
-                            <div className={`absolute top-3 left-3 ${item.badgeColor} text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm`}>{item.badge}</div>
-                        )}
-                        <button className="absolute top-3 right-3 p-1.5 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-red-500 transition-colors">
-                            <span className="material-symbols-outlined text-[16px]">favorite_border</span>
-                        </button>
-                    </div>
-                    <div className="p-4">
-                        <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1 group-hover:text-primary transition-colors truncate">{item.title}</h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-xs mb-3 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">location_on</span> {item.loc}
-                        </p>
-                        <div className="flex justify-between items-center text-sm font-medium text-slate-700 dark:text-slate-300 border-t border-slate-100 dark:border-slate-700 pt-3">
-                            <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">text_snippet</span> {item.area} sqft</span>
-                            <span className="font-bold text-slate-900 dark:text-white">{item.price}<span className="text-xs font-normal text-slate-400">/sqft</span></span>
+            {getCurrentBatch().map((item, index) => {
+                const favorited = isFavorite(item);
+                return (
+                    <div 
+                        key={`${recommendationBatch}-${index}`}
+                        onClick={() => onAssetSelect(item)}
+                        className="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-all cursor-pointer animate-[fadeIn_0.5s_ease-out]"
+                    >
+                        <div className="h-48 bg-cover bg-center relative transition-transform duration-500 hover:scale-105" style={{backgroundImage: `url("${item.img}")`}}>
+                            {item.badge && (
+                                <div className={`absolute top-3 left-3 ${item.badgeColor} text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm`}>{item.badge}</div>
+                            )}
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onToggleFavorite) onToggleFavorite(item);
+                                }}
+                                className={`absolute top-3 right-3 p-1.5 backdrop-blur-md rounded-full transition-colors ${favorited ? 'bg-white text-primary' : 'bg-white/20 text-white hover:bg-white hover:text-red-500'}`}
+                            >
+                                <span className="material-symbols-outlined text-[16px]" style={favorited ? {fontVariationSettings: "'FILL' 1"} : {}}>favorite_border</span>
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1 group-hover:text-primary transition-colors truncate">{item.title}</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs mb-3 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">location_on</span> {item.loc}
+                            </p>
+                            <div className="flex justify-between items-center text-sm font-medium text-slate-700 dark:text-slate-300 border-t border-slate-100 dark:border-slate-700 pt-3">
+                                <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">text_snippet</span> {item.area} sqft</span>
+                                <span className="font-bold text-slate-900 dark:text-white">{item.price}<span className="text-xs font-normal text-slate-400">/sqft</span></span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
           </div>
         </div>
 

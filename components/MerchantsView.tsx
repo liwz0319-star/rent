@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MerchantDetailsModal from './MerchantDetailsModal';
 import AddMerchantModal from './AddMerchantModal';
 import EditMerchantModal from './EditMerchantModal';
 
-const MERCHANTS_DATA = [
+const INITIAL_MERCHANTS_DATA = [
   {
     id: 1,
     name: "Apex Workspaces",
@@ -65,12 +65,21 @@ const MERCHANTS_DATA = [
 ];
 
 const MerchantsView: React.FC = () => {
+  const [merchants, setMerchants] = useState(INITIAL_MERCHANTS_DATA);
   const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
   const [isAddMerchantModalOpen, setIsAddMerchantModalOpen] = useState(false);
   const [isEditMerchantModalOpen, setIsEditMerchantModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<number | null>(null);
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setActionMenuOpenId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const handleApprove = () => {
     alert(`Merchant ${selectedMerchant?.name} has been approved.`);
@@ -90,7 +99,6 @@ const MerchantsView: React.FC = () => {
   const handleEditSave = () => {
     alert(`Merchant details for ${selectedMerchant?.name} updated successfully!`);
     setIsEditMerchantModalOpen(false);
-    // Note: In a real app, you might want to refresh the selectedMerchant data here
   };
 
   const handleEditDelete = () => {
@@ -101,14 +109,35 @@ const MerchantsView: React.FC = () => {
     }
   };
 
+  const handleEditAction = (e: React.MouseEvent, merchant: any) => {
+    e.stopPropagation();
+    setSelectedMerchant(merchant);
+    setIsEditMerchantModalOpen(true);
+    setActionMenuOpenId(null);
+  };
+
+  const handleDisableAction = (e: React.MouseEvent, merchant: any) => {
+    e.stopPropagation();
+    const newStatus = merchant.status === 'Suspended' ? 'Verified' : 'Suspended';
+    const newStatusColor = newStatus === 'Verified' 
+        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800"
+        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800";
+    const newStatusDot = newStatus === 'Verified' ? "bg-green-500" : "bg-red-500";
+
+    setMerchants(prev => prev.map(m => 
+        m.id === merchant.id 
+        ? { ...m, status: newStatus, statusColor: newStatusColor, statusDot: newStatusDot } 
+        : m
+    ));
+    setActionMenuOpenId(null);
+  };
+
+  const toggleActionMenu = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    setActionMenuOpenId(actionMenuOpenId === id ? null : id);
+  };
+
   const openEditModal = () => {
-    // We can keep the details modal open or close it. 
-    // Since Edit Modal is a full overlay, closing details modal might be cleaner or stacking them.
-    // Let's close details for a cleaner transition, or keep selectedMerchant but close details view.
-    // Actually, EditMerchantModal needs selectedMerchant.
-    // Let's toggle the visibility state.
-    // If we want to return to details after edit, we need more complex state.
-    // For now, let's just open edit on top (z-index handles it) or switch.
     setIsEditMerchantModalOpen(true);
   };
 
@@ -325,7 +354,7 @@ const MerchantsView: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
-                            {MERCHANTS_DATA
+                            {merchants
                                 .filter(m => !statusFilter || m.status === statusFilter)
                                 .filter(m => !categoryFilter || m.category === categoryFilter)
                                 .filter(m => !searchQuery || m.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -333,7 +362,7 @@ const MerchantsView: React.FC = () => {
                                 <tr 
                                     key={merchant.id} 
                                     onClick={() => setSelectedMerchant(merchant)}
-                                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer"
+                                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer relative"
                                 >
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -386,16 +415,35 @@ const MerchantsView: React.FC = () => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                                         <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                alert(`Actions for ${merchant.name}`);
-                                            }}
-                                            className="text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                                            onClick={(e) => toggleActionMenu(e, merchant.id)}
+                                            className={`text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 ${actionMenuOpenId === merchant.id ? 'bg-slate-100 dark:bg-slate-700 text-primary' : ''}`}
                                         >
                                             <span className="material-symbols-outlined" style={{fontSize: '20px'}}>more_vert</span>
                                         </button>
+                                        
+                                        {/* Dropdown Menu */}
+                                        {actionMenuOpenId === merchant.id && (
+                                            <div className="absolute right-8 top-10 w-40 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden animate-[fadeIn_0.1s_ease-out]">
+                                                <div className="py-1">
+                                                    <button 
+                                                        onClick={(e) => handleEditAction(e, merchant)}
+                                                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-left transition-colors"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                                                        Edit
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => handleDisableAction(e, merchant)}
+                                                        className={`flex items-center gap-2 w-full px-4 py-2 text-sm text-left transition-colors ${merchant.status === 'Suspended' ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/10' : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10'}`}
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">{merchant.status === 'Suspended' ? 'check_circle' : 'block'}</span>
+                                                        {merchant.status === 'Suspended' ? 'Enable' : 'Disable'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

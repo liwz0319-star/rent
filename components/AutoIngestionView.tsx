@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import NotificationButton from './NotificationButton';
 import ManualEditModal from './ManualEditModal';
 
 interface AutoIngestionViewProps {
   onNavigate: (view: any) => void;
+  onSyncAssets?: (assets: any[]) => void;
 }
 
 const GALLERY_IMAGES = [
@@ -34,7 +34,7 @@ const GALLERY_IMAGES = [
   }
 ];
 
-const AutoIngestionView: React.FC<AutoIngestionViewProps> = ({ onNavigate }) => {
+const AutoIngestionView: React.FC<AutoIngestionViewProps> = ({ onNavigate, onSyncAssets }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<'detail' | 'grid'>('detail');
   const [isManualEditOpen, setIsManualEditOpen] = useState(false);
@@ -58,6 +58,29 @@ const AutoIngestionView: React.FC<AutoIngestionViewProps> = ({ onNavigate }) => 
     }
   };
 
+  const handleSyncClick = () => {
+    if (onSyncAssets) {
+        // Convert current gallery images to Asset format
+        const newAssets = GALLERY_IMAGES.map((img, index) => ({
+            id: Date.now() + index, // Generate unique ID based on timestamp
+            name: img.alt || "Auto-Ingested Asset",
+            owner: "Apex Workspaces", // Default owner
+            locationCode: `AI-${Math.floor(Math.random() * 1000)}`, // Auto-generated code
+            status: "Available",
+            area: "Unspecified",
+            health: 100,
+            thumb: img.src,
+            image: img.src,
+            workstations: "Flexible",
+            color: index % 2 === 0 ? "green" : "orange"
+        }));
+        
+        onSyncAssets(newAssets);
+    } else {
+        alert("Syncing to Digital Twin Library...");
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
         <input 
@@ -68,31 +91,6 @@ const AutoIngestionView: React.FC<AutoIngestionViewProps> = ({ onNavigate }) => 
             accept="image/*,video/*"
             onChange={handleFileChange}
         />
-
-        {/* Header */}
-        <header className="h-16 border-b border-slate-200 flex items-center justify-between px-8 bg-white flex-shrink-0 z-20">
-            <div className="flex items-center text-sm text-slate-500 font-medium">
-                <a className="hover:text-primary transition-colors cursor-pointer" onClick={() => onNavigate('home')}>
-                    <span className="material-symbols-outlined text-[20px]">home</span>
-                </a>
-                <span className="material-symbols-outlined text-[16px] mx-2 text-slate-300">chevron_right</span>
-                <span className="hover:text-slate-900 transition-colors cursor-pointer">Asset Perception</span>
-                <span className="material-symbols-outlined text-[16px] mx-2 text-slate-300">chevron_right</span>
-                <span className="text-slate-900 font-semibold bg-slate-100 px-2 py-0.5 rounded">Auto-Ingestion</span>
-            </div>
-            <div className="flex items-center gap-2">
-                <div className="relative mr-4 hidden md:block">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                        <span className="material-symbols-outlined text-[18px]">search</span>
-                    </span>
-                    <input className="w-64 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-primary focus:border-primary block pl-9 p-2 placeholder-slate-400 transition-all hover:bg-slate-100" placeholder="Search assets..." type="text"/>
-                </div>
-                <button className="p-2 text-slate-400 hover:text-primary hover:bg-orange-50 rounded-lg transition-colors" onClick={() => alert("Toggle theme")}>
-                    <span className="material-symbols-outlined text-[20px]">dark_mode</span>
-                </button>
-                <NotificationButton />
-            </div>
-        </header>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto bg-white p-8 pb-32">
@@ -286,7 +284,10 @@ const AutoIngestionView: React.FC<AutoIngestionViewProps> = ({ onNavigate }) => 
                 >
                     Manual Edit
                 </button>
-                <button className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-sm shadow-md hover:shadow-lg hover:shadow-orange-500/20 transition-all flex items-center gap-2" onClick={() => alert("Syncing to Digital Twin Library...")}>
+                <button 
+                    className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-sm shadow-md hover:shadow-lg hover:shadow-orange-500/20 transition-all flex items-center gap-2" 
+                    onClick={handleSyncClick}
+                >
                     <span className="material-symbols-outlined text-[20px]">sync_alt</span>
                     Sync to Digital Twin Library
                 </button>

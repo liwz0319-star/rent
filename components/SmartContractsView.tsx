@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import NotificationButton from './NotificationButton';
 import SignContractModal from './SignContractModal';
 
 interface SmartContractsViewProps {
@@ -32,8 +31,6 @@ const SmartContractsView: React.FC<SmartContractsViewProps> = ({ onNavigate, onO
                         </span>
                         <input className="block w-64 rounded-full border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 py-2 pl-10 pr-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-primary/20 placeholder:text-slate-400 transition-all" placeholder="Search contracts, hash, or tags..." type="text"/>
                     </div>
-                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <NotificationButton />
                     <button className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" onClick={onOpenSettingsModal}>
                         <span className="material-symbols-outlined text-[22px]">settings</span>
                     </button>

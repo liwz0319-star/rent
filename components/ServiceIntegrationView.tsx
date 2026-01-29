@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 
-const ServiceIntegrationView: React.FC = () => {
+interface ServiceIntegrationViewProps {
+  onRequestService?: () => void;
+}
+
+const ServiceIntegrationView: React.FC<ServiceIntegrationViewProps> = ({ onRequestService }) => {
   const [activeServiceTab, setActiveServiceTab] = useState('Cleaning');
+
+  const handleRequestClick = () => {
+    if (onRequestService) {
+        onRequestService();
+    } else {
+        alert("Requesting Service...");
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-300">
@@ -13,7 +25,7 @@ const ServiceIntegrationView: React.FC = () => {
                         <p className="text-slate-500 dark:text-slate-400 text-base">Manage third-party service providers, monitor supplier performance, and dispatch active work orders efficiently.</p>
                     </div>
                     <button 
-                        onClick={() => alert("Dispatching new service...")}
+                        onClick={handleRequestClick}
                         className="flex-shrink-0 flex items-center justify-center gap-2 rounded-lg h-12 px-6 bg-primary hover:bg-primary-hover transition-all text-white shadow-lg shadow-orange-500/20 text-sm font-bold tracking-wide active:translate-y-0.5"
                     >
                         <span className="material-symbols-outlined">add_task</span>
@@ -199,8 +211,8 @@ const ServiceIntegrationView: React.FC = () => {
                                     <span className="text-slate-900 dark:text-white font-semibold ml-1">5.0</span>
                                     <span className="text-slate-500 dark:text-slate-400 text-xs ml-1">(120 Reviews)</span>
                                 </div>
-                                <button onClick={() => alert("Managing CleanCo Services")} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
-                                    Manage
+                                <button onClick={handleRequestClick} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
+                                    Request Now
                                 </button>
                             </div>
                             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-shadow hover:shadow-md">
@@ -220,15 +232,15 @@ const ServiceIntegrationView: React.FC = () => {
                                     <span className="text-slate-900 dark:text-white font-semibold ml-1">4.5</span>
                                     <span className="text-slate-500 dark:text-slate-400 text-xs ml-1">(84 Reviews)</span>
                                 </div>
-                                <button onClick={() => alert("Managing TechFix Solutions")} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
-                                    Manage
+                                <button onClick={handleRequestClick} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
+                                    Request Now
                                 </button>
                             </div>
                             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-shadow hover:shadow-md">
                                 <div className="flex items-center gap-3">
                                     <div className="size-12 rounded-lg bg-slate-100 dark:bg-slate-700 bg-center bg-cover border border-slate-200 dark:border-slate-600" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDqsJvbSqeYubzb-Bm5vL5KBdJjvPATZeYbuyQcW6jsGf8XJ_nlZjXjftc4mG05q_hPSEW2Z1i71KoLzkslSPHz0vhuq6NuFHcfxUFZBsIk4Uj4g-Zt2zU_Zefxi9EV4u4kfUjXpx1fRupyoMUooAAOHgcUN8wxOqVPZuThXXFS2AD0BMp7hAh3X18CMsitxtiFs05haB62HmznKPb5N3p_25Wqk6f-A-TNgTfN93g0P0WMki9pT4AJitkGcFLK73AERqD_E6UCRGdX")'}}></div>
                                     <div className="flex flex-col">
-                                        <h3 className="text-base font-bold text-slate-900 dark:text-white">FreshEats Catering</h3>
+                                        <h3 className="text-base font-bold text-slate-900 dark:text-white">FreshEats</h3>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">Corporate Catering</p>
                                     </div>
                                 </div>
@@ -238,11 +250,11 @@ const ServiceIntegrationView: React.FC = () => {
                                     <span className="material-symbols-outlined text-[18px]">star</span>
                                     <span className="material-symbols-outlined text-[18px]">star</span>
                                     <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="text-slate-900 dark:text-white font-semibold ml-1">4.8</span>
+                                    <span className="text-slate-900 dark:text-white font-semibold ml-1">4.9</span>
                                     <span className="text-slate-500 dark:text-slate-400 text-xs ml-1">(210 Reviews)</span>
                                 </div>
-                                <button onClick={() => alert("Managing FreshEats Catering")} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
-                                    Manage
+                                <button onClick={handleRequestClick} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
+                                    Request Now
                                 </button>
                             </div>
                         </div>
