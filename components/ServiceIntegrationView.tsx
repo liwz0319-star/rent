@@ -1,267 +1,336 @@
 import React, { useState } from 'react';
+import ServiceReservationModal from './ServiceReservationModal';
+import AddMerchantModal from './AddMerchantModal';
+import OrderDetailsModal from './OrderDetailsModal';
 
 interface ServiceIntegrationViewProps {
   onRequestService?: () => void;
 }
 
 const ServiceIntegrationView: React.FC<ServiceIntegrationViewProps> = ({ onRequestService }) => {
-  const [activeServiceTab, setActiveServiceTab] = useState('Cleaning');
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [isAddMerchantModalOpen, setIsAddMerchantModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Mock Data for Kanban
+  const kanbanColumns = {
+    pending: [
+        { id: 'WO-829', title: 'Emergency IT Support - Room 302', desc: 'Network outage affecting executive conference room.', priority: 'High', type: 'IT', dept: 'IT', time: '45m', color: 'red' },
+        { id: 'WO-831', title: 'Filter Replacement - L2', desc: 'Regular maintenance for water dispenser filters.', priority: 'Low', type: 'MT', dept: 'Maintenance', time: '2h', color: 'blue' },
+        { id: 'WO-835', title: 'Lighting Check - Hallway', desc: 'Flickering lights reported on floor 4.', priority: 'Low', type: 'MT', dept: 'Maintenance', time: '4h', color: 'blue' }
+    ],
+    dispatched: [
+        { id: 'WO-820', title: 'Catering - Suite 10', desc: 'Lunch service for client meeting. Setup required.', priority: 'Med', type: 'Sup', vendor: 'FreshFoods', time: '2h', color: 'yellow', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9LVfSefEbjU9xb70QeWMRzQH8-7PFu8kithHUnZzFU5gzZLs9wDu3RsSXez-ChHeae_kItKOFLXBQTsooa4vvdmQjrc0zLO-9jwQkV71QyrbHrfv4JDEuiEIDJn6w9XjRIlNGtLuTN7f5GX54VvJOqm1pUDrCOatVd7yGmGd-7PD1f7fjzIXghzQEHVR1hp30yxQiD4M7Q0QfI23il7MmZMShtNWEAYbFoxuZo2aQuaB_3URM5FXLSK_zDs4LWF62Wvu1UJdldXyP' }
+    ],
+    inProgress: [
+        { id: 'WO-815', title: 'HVAC Repair - Lobby', desc: 'AC unit leaking water near reception desk.', priority: 'High', type: 'Tech', vendor: 'TechCool', progress: 66, color: 'red', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCXiK_75E33Wgloagx37h1zaoGHjU9b6pkArQTVpk-bugKOFsUvkFbeYPJcbf9I_MS3gzGqF7SdSs3837-T_t3BudTuSNRc9_KlIZNX0Q5QGME-CPaAw6hsDoM51xgnNtI60gPEgEigYk7SeyOZPzVd32ScAjzrEQZwF1Xojd-nT7a1VgsRN-qJ4eeBQmcuoz3KpzqwBqyfB3rtRo8bfzwDtu2sFPaoPJYn248GQDmAgb1bH6B1tvodnkRDC3LvE_-3xykV0rCLmBCX' },
+        { id: 'WO-818', title: 'Elevator B Maintenance', desc: 'Scheduled monthly checkup.', priority: 'Med', type: 'Tech', vendor: 'Otis Serv', progress: 33, color: 'yellow', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCJWvXVolSJ1g7KclxstgxA4DKFBrzKRfz9oXbCg8G3qu0PIGFSU7iI9aOGrZQGwBoMi0kwvvB_doZjWDielHDaXbr7M-UGTswmmm2e39uwF51QbiHgarQNvSDW0Uh3uVvbHRekgAweBbTtr3xwglQ6X6NHd3-z_TEQTtvlsjqZROcm9rXjWVNFgWXO8PODNGG-Wo6GUFpIIsAPbpcMBMo9I6kZjyLsgmiaeNVwLoYQFSZP5UjtEfySVGj7EEmk8wahFaXq90h3PS9w' }
+    ],
+    completed: [
+        { id: 'WO-801', title: 'Cleaning - 5th Floor', desc: 'Completed at 10:30 AM', priority: 'Low', type: 'Sup', vendor: 'GreenClean', color: 'gray' },
+        { id: 'WO-799', title: 'Waste Disposal', desc: 'Completed at 09:15 AM', priority: 'Low', type: 'Sup', vendor: 'GreenClean', color: 'gray' }
+    ]
+  };
 
-  const handleRequestClick = () => {
-    if (onRequestService) {
-        onRequestService();
-    } else {
-        alert("Requesting Service...");
-    }
+  // Mock Suppliers
+  const suppliers = [
+    { id: 1, name: 'GreenClean Co.', code: 'GC', sub: 'ID: SUP-1004', type: 'Cleaning Services', active: 12, rating: 4.8, reviews: 210, status: 'Active', color: 'green' },
+    { id: 2, name: 'FastByte IT', code: 'FB', sub: 'ID: SUP-2041', type: 'IT Support', active: 2, rating: 4.2, reviews: 45, status: 'Busy', color: 'indigo' },
+    { id: 3, name: 'TechCool Systems', code: 'TC', sub: 'ID: SUP-1155', type: 'HVAC Maintenance', active: 5, rating: 4.9, reviews: 89, status: 'Active', color: 'orange' }
+  ];
+
+  const handleCardClick = (card: any) => {
+    // Map kanban card to order details structure
+    setSelectedOrder({
+        id: card.id,
+        title: card.title,
+        desc: card.desc,
+        status: 'In Progress', // Generic status for view
+        amount: '$ --',
+        date: 'Oct 24, 2023',
+        img: card.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDgj6TcCE1JIzLofbhgpEWovJ_semvVdhsCk00ieG25GV9Qop9oeQO8CvJpmtW-l-JP0KL1sqx-Lt8xoLZkAsQ68fzWJRnGjK4ucdhij8YqkSH6y4q0KNDLTuZMFNVemdwLAEznjod72wBGNenRC4vCqlutBCV5Osz4BoxnZuzvQNkqeL7zfp35vbF2v4JvrDA77QfVDstwZIccs2cPBynXqeS4mBZeIml0Xxr5iNAGHz7bjlSqzSAHoyUQwvMid4iTasKFVTb6dLzE'
+    });
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-300">
-        <div className="flex-1 overflow-y-auto flex flex-col relative">
-            <div className="flex-1 max-w-[1200px] w-full mx-auto p-6 md:p-8 lg:p-10 flex flex-col gap-8">
-                <header className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div className="flex flex-col gap-2 max-w-xl">
-                        <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">Service Integration</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-base">Manage third-party service providers, monitor supplier performance, and dispatch active work orders efficiently.</p>
-                    </div>
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        {/* Header */}
+        <header className="flex items-center justify-between px-8 py-4 bg-slate-50 dark:bg-slate-900 z-10 shrink-0">
+            <div className="flex flex-col gap-1">
+                <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal hover:text-primary transition-colors cursor-pointer">AssetAI</span>
+                    <span className="text-slate-500 dark:text-slate-500 text-sm font-medium leading-normal">/</span>
+                    <span className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal hover:text-primary transition-colors cursor-pointer">Ops</span>
+                    <span className="text-slate-500 dark:text-slate-500 text-sm font-medium leading-normal">/</span>
+                    <span className="text-slate-900 dark:text-white text-sm font-medium leading-normal">Service Integration</span>
+                </div>
+                <h1 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">Service Integration Dashboard</h1>
+            </div>
+            <div className="flex items-center gap-4">
+                <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" style={{fontSize: '20px'}}>search</span>
+                    <input 
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64 text-slate-900 dark:text-white placeholder-gray-400" 
+                        placeholder="Search orders..." 
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors relative text-slate-900 dark:text-white">
+                    <span className="material-symbols-outlined" style={{fontSize: '20px'}}>notifications</span>
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
+                </button>
+            </div>
+        </header>
+
+        {/* Scrollable Main Content */}
+        <main className="flex-1 overflow-y-auto px-8 pb-8 pt-2">
+            
+            {/* Kanban Section */}
+            <div className="flex flex-col gap-4 mb-8">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-slate-900 dark:text-white text-lg font-bold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">view_kanban</span>
+                        Work Order Kanban <span className="text-sm font-normal text-gray-500 ml-2 hidden sm:inline">(工单看板)</span>
+                    </h2>
                     <button 
-                        onClick={handleRequestClick}
-                        className="flex-shrink-0 flex items-center justify-center gap-2 rounded-lg h-12 px-6 bg-primary hover:bg-primary-hover transition-all text-white shadow-lg shadow-orange-500/20 text-sm font-bold tracking-wide active:translate-y-0.5"
+                        onClick={() => setIsReservationModalOpen(true)}
+                        className="bg-primary hover:bg-[#e06200] text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm transition-all active:scale-95"
                     >
-                        <span className="material-symbols-outlined">add_task</span>
-                        <span className="truncate">Dispatch New Service</span>
+                        <span className="material-symbols-outlined" style={{fontSize: '20px'}}>add</span>
+                        Create New Work Order
                     </button>
-                </header>
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start">
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">Active Requests</p>
-                            <span className="material-symbols-outlined text-primary">pending_actions</span>
-                        </div>
-                        <div className="flex items-baseline gap-3">
-                            <p className="text-slate-900 dark:text-white text-3xl font-black">14</p>
-                            <p className="text-emerald-600 dark:text-emerald-400 text-sm font-medium flex items-center bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-                                <span className="material-symbols-outlined text-sm mr-1">trending_up</span>+2 this week
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start">
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">Avg. Response Time</p>
-                            <span className="material-symbols-outlined text-primary">timer</span>
-                        </div>
-                        <div className="flex items-baseline gap-3">
-                            <p className="text-slate-900 dark:text-white text-3xl font-black">12m 30s</p>
-                            <p className="text-emerald-600 dark:text-emerald-400 text-sm font-medium flex items-center bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-                                <span className="material-symbols-outlined text-sm mr-1">arrow_downward</span>-1m 15s
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start">
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">Supplier Score</p>
-                            <span className="material-symbols-outlined text-primary">stars</span>
-                        </div>
-                        <div className="flex items-baseline gap-3">
-                            <p className="text-slate-900 dark:text-white text-3xl font-black">4.8</p>
-                            <span className="text-slate-500 dark:text-slate-400 text-base">/ 5.0</span>
-                            <p className="text-emerald-600 dark:text-emerald-400 text-sm font-medium flex items-center bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-                                <span className="material-symbols-outlined text-sm mr-1">trending_up</span>+0.2
-                            </p>
-                        </div>
-                    </div>
-                </section>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    <div className="lg:col-span-2 flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Service Work Order Board</h2>
-                            <button className="text-primary text-sm font-bold hover:underline">View All History</button>
-                        </div>
-                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                            <div className="flex border-b border-slate-200 dark:border-slate-700 px-4 gap-6 bg-gray-50/50 dark:bg-white/5">
-                                {['Cleaning', 'IT Support', 'Catering'].map((tab) => (
-                                    <button 
-                                        key={tab}
-                                        onClick={() => setActiveServiceTab(tab)}
-                                        className={`flex flex-col items-center justify-center border-b-[3px] pb-3 pt-4 px-2 transition-colors ${
-                                            activeServiceTab === tab 
-                                                ? 'border-b-primary text-primary' 
-                                                : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                                        }`}
-                                    >
-                                        <p className="text-sm font-bold">{tab} ({tab === 'Cleaning' ? 5 : tab === 'IT Support' ? 3 : 6})</p>
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700">
-                                {/* Static List Items */}
-                                <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => alert("Viewing Request #SR-2024-001")}>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-mono text-slate-500 dark:text-slate-400">#SR-2024-001</span>
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">
-                                                    In Progress
-                                                </span>
-                                            </div>
-                                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-1">Lobby Main Entrance Spill</h3>
-                                        </div>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">12m ago</span>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-6 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtmBbMtWY239mzRKvxEpXdmNusm1dKEMSAToKaRjbUAR_XJLL98pAgleSEjOUoFJC5wKesBCHJVjNEiT1MD3owS9Frdf3fL5ieFDzY7IxeL0nk4ZhkC-LjVAKR5-hvDRySq7qi4ZxYcxGuUWHL53xoCVLoOphPgq5piGNbOWZf9gceCcQTVrRVn_DBTEtdcaf8A-x58311uZ5Zw67z9KmeZd10IBGcnvdpcaYcAsoE1UrstoVG7JUqVUl-TPPo68TQ1WZv4_WEa-dZ")'}}></div>
-                                            <span className="text-sm text-slate-900 dark:text-white font-medium">CleanCo Services</span>
-                                            <span className="ml-2 flex items-center gap-1 text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                                                <span className="material-symbols-outlined text-[10px]">bolt</span>AI Match
-                                            </span>
-                                        </div>
-                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">arrow_forward</span>
-                                    </div>
-                                </div>
+                </div>
 
-                                <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => alert("Viewing Request #SR-2024-004")}>
+                {/* Kanban Board */}
+                <div className="flex gap-4 overflow-x-auto pb-4 min-h-[500px]">
+                    {/* Column: Pending */}
+                    <div className="flex flex-col bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 w-[280px] shrink-0 border border-transparent dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pending</span>
+                            <span className="bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">{kanbanColumns.pending.length}</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 custom-scrollbar">
+                            {kanbanColumns.pending.map(card => (
+                                <div key={card.id} onClick={() => handleCardClick(card)} className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 group cursor-pointer hover:shadow-md transition-shadow">
                                     <div className="flex justify-between items-start mb-2">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-mono text-slate-500 dark:text-slate-400">#SR-2024-004</span>
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 dark:bg-yellow-900/30 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:text-yellow-300 ring-1 ring-inset ring-yellow-600/20 dark:ring-yellow-400/20">
-                                                    Dispatched
-                                                </span>
-                                            </div>
-                                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-1">Conference Room B Sanitization</h3>
-                                        </div>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">45m ago</span>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${card.priority === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}>{card.priority}</span>
+                                        <span className="text-xs text-gray-400">#{card.id}</span>
                                     </div>
-                                    <div className="flex items-center justify-between mt-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-6 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDA1_diBAV6x1JuTY6D-GNF0utu5wEbjwVl3OEbCL1RJdDOtgo9-PRqHWAy4Ic30tCIw4Nfj6NBoy4OE7F6stlOqVhuidPlswjNgcx3BfshrQDEIyu5NAiI-3XDuRnlkqMXYavDtBInBRLH55pLLXytSt4tOMHgMOAEzVhtL_pXxfidQiNug4gPy74HqeY1DCDsKJVPw_sqKRpBuipDDdp_c0Qjem2ZB0UZ0POnXPyXnLpi80Snfd71eANgl4y4Cwg0s6ZycbAQk3Hu")'}}></div>
-                                            <span className="text-sm text-slate-900 dark:text-white font-medium">CleanCo Services</span>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{card.title}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{card.desc}</p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-700">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] font-bold">{card.type}</div>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">{card.dept}</span>
                                         </div>
-                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">arrow_forward</span>
+                                        <span className={`text-xs font-medium flex items-center gap-1 ${card.priority === 'High' ? 'text-red-500' : 'text-gray-400'}`}>
+                                            <span className="material-symbols-outlined" style={{fontSize: '14px'}}>schedule</span> {card.time}
+                                        </span>
                                     </div>
                                 </div>
-
-                                <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => alert("Viewing Request #SR-2024-012")}>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-mono text-slate-500 dark:text-slate-400">#SR-2024-012</span>
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-600/20 dark:ring-emerald-400/20">
-                                                    Completed
-                                                </span>
-                                            </div>
-                                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-1">Executive Suite 4F Window Clean</h3>
-                                        </div>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">2h ago</span>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-6 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBLkq9a16p6lE6X1diV_PL88YT1qoGmCxikUslFqKRTkUoTreBMG5GwsvQxPsJZj4NRH1kPuKffVGueUI89NVW5htovnNCun7yLIZebIxzBHDjK7MoVRlgnKB0vjw6fy-ZZ9h3Te4GOqz_yx5trQ8WT1xTt_hNOXErpzm9eo_ci-0j1AQYzvfAsj--9PcQz93nljTyKOQ8Npk7KRSj18ICFc4J69DDsNkUrDe6BDAL16gncp5jlBGUPIhbcdv1eCo3Ux_ThFHZDDzzH")'}}></div>
-                                            <span className="text-sm text-slate-900 dark:text-white font-medium">SkyHigh Services</span>
-                                        </div>
-                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">arrow_forward</span>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer" onClick={() => alert("Viewing Request #SR-2024-015")}>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-mono text-slate-500 dark:text-slate-400">#SR-2024-015</span>
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-400/20">
-                                                    In Progress
-                                                </span>
-                                            </div>
-                                            <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-1">Cafeteria Waste Disposal</h3>
-                                        </div>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">10m ago</span>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="size-6 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCHdlTDgb_qPwQnYgAkv_Gv57iprpN3TWEys93vBWnwCdhP2Vx1FeVDrIl4fG68XTXLGn-xN2likJQjOBwVqAUSqH_PrWmZiSjWb-Sd8PUxbP60Mxm6k-Ept8-giqcrjkJWciq4cfgVlkPTSOj_tMUtDdpzZE0NpEtslngm61FUWggkqjZugQww6DSJku_l9LovNm0tSJtR0wMBwmf31SeiQQ7O0ns8diSXPs1g7HkJpxICnb-jmgPONoxDQL3gzq9DBRPslz0gns7w")'}}></div>
-                                            <span className="text-sm text-slate-900 dark:text-white font-medium">CleanCo Services</span>
-                                        </div>
-                                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">arrow_forward</span>
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Supplier Management</h2>
-                            <button className="text-primary text-sm font-bold hover:underline">Directory</button>
+
+                    {/* Column: Dispatched */}
+                    <div className="flex flex-col bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 w-[280px] shrink-0 border border-transparent dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Dispatched</span>
+                            <span className="bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">{kanbanColumns.dispatched.length}</span>
                         </div>
-                        <div className="flex flex-col gap-3">
-                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-shadow hover:shadow-md">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-12 rounded-lg bg-slate-100 dark:bg-slate-700 bg-center bg-cover border border-slate-200 dark:border-slate-600" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBzFhTAeNaMvclUTUQ8kqLBSVRfovlMxEhfW6z2AuS1aC6bXJHe-T76-KuXGLO0bJ3g-Ck_IfzX2O2xChVrn-lja2kuW1Srw_OMBM8VjTf87sZ5oKiiWUwseHW3yo1a7HLry3C6CrllwrW40PezQbxitL78rdQZWpiI2AhRM4dqskCoB0WiJmmwhY88GE9vVf-8WLG0NROUVkpLYtcYRNOHYjDEDzv9u43sAkrb8KG-dHVSbTQyyCUHTYDIIKyLujZF3jaWZ5J950qw")'}}></div>
-                                    <div className="flex flex-col">
-                                        <h3 className="text-base font-bold text-slate-900 dark:text-white">CleanCo Services</h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">Commercial Cleaning</p>
+                        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 custom-scrollbar">
+                            {kanbanColumns.dispatched.map(card => (
+                                <div key={card.id} onClick={() => handleCardClick(card)} className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 group cursor-pointer hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">{card.priority}</span>
+                                        <span className="text-xs text-gray-400">#{card.id}</span>
+                                    </div>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{card.title}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{card.desc}</p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-700">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="bg-center bg-no-repeat bg-cover rounded-full w-5 h-5 bg-slate-200" style={{backgroundImage: `url('${card.avatar}')`}}></div>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">{card.vendor}</span>
+                                        </div>
+                                        <span className="text-xs font-medium text-orange-500 flex items-center gap-1">
+                                            <span className="material-symbols-outlined" style={{fontSize: '14px'}}>schedule</span> {card.time}
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-yellow-500 text-sm">
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="text-slate-900 dark:text-white font-semibold ml-1">5.0</span>
-                                    <span className="text-slate-500 dark:text-slate-400 text-xs ml-1">(120 Reviews)</span>
-                                </div>
-                                <button onClick={handleRequestClick} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
-                                    Request Now
-                                </button>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-shadow hover:shadow-md">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-12 rounded-lg bg-slate-100 dark:bg-slate-700 bg-center bg-cover border border-slate-200 dark:border-slate-600" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAZFBLfeUo1A5OAFg-0hBNHnZJbnPiSgcmQ6WVx4EAJ5nCT6hFpDwKH_-FFLRMjkdscCTXChcY_jNDV0C32fxiURAx7rmMUF9eJOJ1jKf7YgqsfolFXbG3zVdZ6BQJMNUwnAvtrJtd_rimHF3w0ajR-Vcq6RMCzWTrFu1DsFxqcCtyhSkTus5zoj3DDPS3hXuvvruV766dHI3ab-YocmRsJmZSuwWBr2upn_OPreRB4eP_NtWzHuhHjIwnRA-0g9z0QXUe8LyIs4_fj")'}}></div>
-                                    <div className="flex flex-col">
-                                        <h3 className="text-base font-bold text-slate-900 dark:text-white">TechFix Solutions</h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">IT Support Infrastructure</p>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Column: In Progress */}
+                    <div className="flex flex-col bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 w-[280px] shrink-0 border border-transparent dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-primary">In Progress</span>
+                            <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">{kanbanColumns.inProgress.length}</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 custom-scrollbar">
+                            {kanbanColumns.inProgress.map(card => (
+                                <div key={card.id} onClick={() => handleCardClick(card)} className="bg-white dark:bg-slate-800 p-3 rounded-lg shadow-sm border-l-4 border-l-primary border-y border-r border-slate-200 dark:border-slate-700 group cursor-pointer hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${card.priority === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'}`}>{card.priority}</span>
+                                        <span className="text-xs text-gray-400">#{card.id}</span>
+                                    </div>
+                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">{card.title}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{card.desc}</p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-700">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="bg-center bg-no-repeat bg-cover rounded-full w-5 h-5 bg-slate-200" style={{backgroundImage: `url('${card.avatar}')`}}></div>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">{card.vendor}</span>
+                                        </div>
+                                        <div className="w-16 h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                            <div className={`h-full ${card.color === 'red' ? 'bg-primary' : 'bg-blue-500'}`} style={{width: `${card.progress}%`}}></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-yellow-500 text-sm">
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star_half</span>
-                                    <span className="text-slate-900 dark:text-white font-semibold ml-1">4.5</span>
-                                    <span className="text-slate-500 dark:text-slate-400 text-xs ml-1">(84 Reviews)</span>
-                                </div>
-                                <button onClick={handleRequestClick} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
-                                    Request Now
-                                </button>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col gap-3 transition-shadow hover:shadow-md">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-12 rounded-lg bg-slate-100 dark:bg-slate-700 bg-center bg-cover border border-slate-200 dark:border-slate-600" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDqsJvbSqeYubzb-Bm5vL5KBdJjvPATZeYbuyQcW6jsGf8XJ_nlZjXjftc4mG05q_hPSEW2Z1i71KoLzkslSPHz0vhuq6NuFHcfxUFZBsIk4Uj4g-Zt2zU_Zefxi9EV4u4kfUjXpx1fRupyoMUooAAOHgcUN8wxOqVPZuThXXFS2AD0BMp7hAh3X18CMsitxtiFs05haB62HmznKPb5N3p_25Wqk6f-A-TNgTfN93g0P0WMki9pT4AJitkGcFLK73AERqD_E6UCRGdX")'}}></div>
-                                    <div className="flex flex-col">
-                                        <h3 className="text-base font-bold text-slate-900 dark:text-white">FreshEats</h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">Corporate Catering</p>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Column: Completed */}
+                    <div className="flex flex-col bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 w-[280px] shrink-0 border border-transparent dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <span className="text-xs font-bold uppercase tracking-wider text-green-600 dark:text-green-400">Completed</span>
+                            <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs px-2 py-0.5 rounded-full">{kanbanColumns.completed.length}</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 custom-scrollbar">
+                            {kanbanColumns.completed.map(card => (
+                                <div key={card.id} onClick={() => handleCardClick(card)} className="bg-white dark:bg-slate-800 opacity-70 p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 group cursor-pointer hover:opacity-100 transition-opacity">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">{card.priority}</span>
+                                        <span className="text-xs text-gray-400 decoration-slate-400 line-through">#{card.id}</span>
+                                    </div>
+                                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 line-through decoration-slate-400">{card.title}</h3>
+                                    <p className="text-xs text-gray-400 mb-3">{card.desc}</p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-700">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="material-symbols-outlined text-green-600 dark:text-green-400" style={{fontSize: '16px'}}>check_circle</span>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">{card.vendor}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-yellow-500 text-sm">
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="material-symbols-outlined text-[18px]">star</span>
-                                    <span className="text-slate-900 dark:text-white font-semibold ml-1">4.9</span>
-                                    <span className="text-slate-500 dark:text-slate-400 text-xs ml-1">(210 Reviews)</span>
-                                </div>
-                                <button onClick={handleRequestClick} className="w-full mt-1 border border-primary text-primary hover:bg-primary hover:text-white transition-colors h-9 rounded-lg text-sm font-bold flex items-center justify-center">
-                                    Request Now
-                                </button>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Supplier Table Section */}
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-slate-900 dark:text-white text-lg font-bold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">groups</span>
+                        Supplier Management <span className="text-sm font-normal text-gray-500 ml-2 hidden sm:inline">(供应商管理)</span>
+                    </h2>
+                    <button 
+                        onClick={() => setIsAddMerchantModalOpen(true)}
+                        className="text-primary hover:text-[#e06200] border border-primary/30 hover:bg-primary/5 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                    >
+                        <span className="material-symbols-outlined" style={{fontSize: '20px'}}>person_add</span>
+                        Register New Supplier
+                    </button>
+                </div>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[700px] text-left">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                                    <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Supplier Name</th>
+                                    <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Service Category</th>
+                                    <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Active Work Orders</th>
+                                    <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Rating</th>
+                                    <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                                    <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                {suppliers.map(supplier => (
+                                    <tr key={supplier.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${supplier.color === 'green' ? 'bg-green-100 text-green-700' : supplier.color === 'indigo' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>{supplier.code}</div>
+                                                <div>
+                                                    <p className="font-medium text-slate-900 dark:text-white">{supplier.name}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{supplier.sub}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${supplier.color === 'green' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : supplier.color === 'indigo' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'}`}>
+                                                {supplier.type}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-slate-900 dark:text-white tabular-nums">{String(supplier.active).padStart(2, '0')}</span>
+                                                <div className="w-24 h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                    <div className={`h-full rounded-full ${supplier.color === 'green' ? 'bg-green-500 w-3/4' : supplier.color === 'indigo' ? 'bg-indigo-500 w-[16%]' : 'bg-orange-500 w-[40%]'}`}></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-1">
+                                                <span className="font-bold text-slate-900 dark:text-white tabular-nums">{supplier.rating}</span>
+                                                <div className="flex text-primary">
+                                                    <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                                                    <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                                                    <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                                                    <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                                                    <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings: supplier.rating > 4.5 ? "'FILL' 1" : "'FILL' 0"}}>star</span>
+                                                </div>
+                                                <span className="text-xs text-gray-400">({supplier.reviews})</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className={`w-2 h-2 rounded-full ${supplier.status === 'Active' ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                                                <span className="text-sm text-gray-600 dark:text-gray-300">{supplier.status}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-6 text-right">
+                                            <button className="text-gray-400 hover:text-primary transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700">
+                                                <span className="material-symbols-outlined">more_vert</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        {isReservationModalOpen && (
+            <ServiceReservationModal 
+                onClose={() => setIsReservationModalOpen(false)} 
+                onConfirm={() => {
+                    setIsReservationModalOpen(false);
+                    // Could trigger payment or success here if desired
+                }}
+            />
+        )}
+        {isAddMerchantModalOpen && (
+            <AddMerchantModal 
+                onClose={() => setIsAddMerchantModalOpen(false)}
+                onSubmit={() => {
+                    alert("Supplier registration submitted!");
+                    setIsAddMerchantModalOpen(false);
+                }}
+            />
+        )}
+        {selectedOrder && (
+            <OrderDetailsModal
+                order={selectedOrder}
+                onClose={() => setSelectedOrder(null)}
+            />
+        )}
     </div>
   );
 };

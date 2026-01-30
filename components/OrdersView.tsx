@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PaymentModal from './PaymentModal';
 import PaymentSuccessModal from './PaymentSuccessModal';
 import OrderDetailsModal from './OrderDetailsModal';
+import InvoiceModal from './InvoiceModal';
 
 // Mock Data
 const ALL_ORDERS = [
@@ -55,13 +56,20 @@ const OrdersView: React.FC = () => {
   const [activeOrderTab, setActiveOrderTab] = useState('All Orders');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaymentSuccessModalOpen, setIsPaymentSuccessModalOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
   const handlePaymentSuccess = () => {
     setIsPaymentModalOpen(false);
     setIsPaymentSuccessModalOpen(true);
+  };
+
+  const handleInvoiceClick = (order: any) => {
+    setSelectedInvoiceOrder(order);
+    setIsInvoiceModalOpen(true);
   };
 
   // Filter Logic
@@ -218,7 +226,10 @@ const OrdersView: React.FC = () => {
                                             Pay Now
                                         </button>
                                     ) : (
-                                        <button onClick={() => alert("Action")} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                        <button 
+                                            onClick={() => handleInvoiceClick(order)} 
+                                            className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-900 dark:text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                                        >
                                             {order.status === 'In Progress' ? 'Track' : 'Invoice'}
                                         </button>
                                     )}
@@ -261,6 +272,12 @@ const OrdersView: React.FC = () => {
             <OrderDetailsModal
                 order={selectedOrder}
                 onClose={() => setSelectedOrder(null)}
+            />
+        )}
+        {isInvoiceModalOpen && selectedInvoiceOrder && (
+            <InvoiceModal
+                order={selectedInvoiceOrder}
+                onClose={() => setIsInvoiceModalOpen(false)}
             />
         )}
     </div>

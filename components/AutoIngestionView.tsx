@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import ManualEditModal from './ManualEditModal';
 
@@ -22,7 +23,7 @@ const GALLERY_IMAGES = [
   },
   {
     id: 3,
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuD61x3S7P2WMadZ7k2SOafb0kE_1RXWSvmsPC5PvqaHr3axQw-5VRgWRe3CMdYzBGt_uTwW06dM7U0FQmsdKwkyHyI7HGzdahZHtsir41oyeXfdTYVoC0KWDng4EufDqaw4SMcMuZsNNuYeLqoEoG73zZGB3cBCaq3m3isbnvtDHMx1r6-PosXmIfJWf2S16jr2ah1uqxjPLz-evjBFSk-wOWPdvpBn2hRIdpcJnSWFPcsLLGEVxBtDwYwfFLbIwKEEmiQwdiNkp3cV",
+    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuD61x3S7P2WMadZ7k2SOafb0kE_1RXWSvmsPC5PvqaHr3axQw-5VRgWRe3CMdYzBGt_uTwW06dM7U0FQmsdKwkyHyI7HGzdahZHtsir41oyeXfdTYVoC0KWDng4EufDqaw4SMcMuZsNNuYeLqoEoG73zVdZ6BQJMNUwnAvtrJtd_rimHF3w0ajR-Vcq6RMCzWTrFu1DsFxqcCtyhSkTus5zoj3DDPS3hXuvvruV766dHI3ab-YocmRsJmZSuwWBr2upn_OPreRB4eP_NtWzHuhHjIwnRA-0g9z0QXUe8LyIs4_fj",
     alt: "Conference room",
     tags: "4 tags"
   },
@@ -48,7 +49,7 @@ const AutoIngestionView: React.FC<AutoIngestionViewProps> = ({ onNavigate, onSyn
     if (files && files.length > 0) {
       // In a real application, you would handle the file upload here.
       // For this demo, we'll just show an alert with the selected file names.
-      const fileNames = Array.from(files).map(f => f.name).join('\n');
+      const fileNames = Array.from(files).map((f: File) => f.name).join('\n');
       alert(`Files selected for upload:\n${fileNames}`);
       
       // Reset the input so the same file can be selected again if needed

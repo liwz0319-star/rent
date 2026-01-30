@@ -50,8 +50,8 @@ const DashboardPage: React.FC = () => {
   // Permission Logic
   const canAccess = (view: ViewType) => {
     if (userRole === 'Admin') {
-        // Admin sees everything EXCEPT Home and Favorites
-        return !['home', 'my-favorites'].includes(view);
+        // Admin sees everything EXCEPT Home, Favorites, Auto-Ingestion, Orders, and Messages
+        return !['home', 'my-favorites', 'auto-ingestion', 'orders', 'messages'].includes(view);
     }
     if (userRole === 'Merchant') {
         // Merchants can access everything except Service Integration (System level), Home, and Favorites
@@ -216,7 +216,9 @@ const DashboardPage: React.FC = () => {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer group ${currentView === 'service-integration' ? 'bg-hermes/10 text-hermes border border-hermes/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
                 >
                 <span className={`material-symbols-outlined text-[20px] ${currentView === 'service-integration' ? 'fill-1' : ''}`}>hub</span>
-                <p className={`text-sm ${currentView === 'service-integration' ? 'font-bold' : 'font-medium'}`}>Service Integration</p>
+                <p className={`text-sm ${currentView === 'service-integration' ? 'font-bold' : 'font-medium'}`}>
+                    {userRole === 'User' ? 'Service' : 'Service Management'}
+                </p>
                 </div>
             )}
           </nav>

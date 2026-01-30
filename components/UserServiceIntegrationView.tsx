@@ -1,16 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ServiceReservationModal from './ServiceReservationModal';
+import PaymentModal from './PaymentModal';
+import PaymentSuccessModal from './PaymentSuccessModal';
 
 const UserServiceIntegrationView: React.FC = () => {
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentSuccessModalOpen, setIsPaymentSuccessModalOpen] = useState(false);
+
+  const handleRequestClick = () => {
+    setIsReservationModalOpen(true);
+  };
+
+  const handleReservationConfirm = () => {
+    setIsReservationModalOpen(false);
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    setIsPaymentSuccessModalOpen(true);
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-white dark:bg-[#1a1a1a] transition-colors duration-200">
       <div className="flex-1 overflow-y-auto flex flex-col relative bg-white dark:bg-[#1a1a1a]">
         <div className="flex-1 max-w-[1400px] w-full mx-auto p-6 md:p-8 flex flex-col gap-8">
           
           {/* Hero Header - Condensed */}
-          <header className="bg-gradient-to-r from-gray-50 via-white to-white dark:from-[#251e18] dark:via-[#1f1a16] dark:to-[#1a1a1a] rounded-xl p-6 border border-[#e7e0da] dark:border-[#403630] shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <header className="bg-gradient-to-r from-gray-50 via-white to-white dark:from-[#251e18] dark:via-[#1f1a16] dark:to-[#1a1a1a] rounded-xl p-6 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative z-10">
               <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#181410] dark:text-[#f3f4f6] mb-1.5 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#FD780F]">auto_awesome</span>
                 Enhance Your Workspace
               </h1>
               <p className="text-sm text-[#8d725e] dark:text-[#a8a29e] leading-relaxed max-w-3xl">
@@ -37,7 +57,7 @@ const UserServiceIntegrationView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {/* Service 1 */}
               <div 
-                onClick={() => alert("Selecting Professional Cleaning")}
+                onClick={handleRequestClick}
                 className="group rounded-xl overflow-hidden border border-[#e7e0da] dark:border-[#403630] bg-white dark:bg-[#2d241c] shadow-sm hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 duration-300"
               >
                 <div className="h-44 w-full bg-cover bg-center relative" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBzFhTAeNaMvclUTUQ8kqLBSVRfovlMxEhfW6z2AuS1aC6bXJHe-T76-KuXGLO0bJ3g-Ck_IfzX2O2xChVrn-lja2kuW1Srw_OMBM8VjTf87sZ5oKiiWUwseHW3yo1a7HLry3C6CrllwrW40PezQbxitL78rdQZWpiI2AhRM4dqskCoB0WiJmmwhY88GE9vVf-8WLG0NROUVkpLYtcYRNOHYjDEDzv9u43sAkrb8KG-dHVSbTQyyCUHTYDIIKyLujZF3jaWZ5J950qw")'}}>
@@ -56,7 +76,7 @@ const UserServiceIntegrationView: React.FC = () => {
               </div>
               {/* Service 2 */}
               <div 
-                onClick={() => alert("Selecting IT Support")}
+                onClick={handleRequestClick}
                 className="group rounded-xl overflow-hidden border border-[#e7e0da] dark:border-[#403630] bg-white dark:bg-[#2d241c] shadow-sm hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 duration-300"
               >
                 <div className="h-44 w-full bg-cover bg-center relative" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAZFBLfeUo1A5OAFg-0hBNHnZJbnPiSgcmQ6WVx4EAJ5nCT6hFpDwKH_-FFLRMjkdscCTXChcY_jNDV0C32fxiURAx7rmMUF9eJOJ1jKf7YgqsfolFXbG3zVdZ6BQJMNUwnAvtrJtd_rimHF3w0ajR-Vcq6RMCzWTrFu1DsFxqcCtyhSkTus5zoj3DDPS3hXuvvruV766dHI3ab-YocmRsJmZSuwWBr2upn_OPreRB4eP_NtWzHuhHjIwnRA-0g9z0QXUe8LyIs4_fj")'}}>
@@ -72,7 +92,7 @@ const UserServiceIntegrationView: React.FC = () => {
               </div>
               {/* Service 3 */}
               <div 
-                onClick={() => alert("Selecting Catering")}
+                onClick={handleRequestClick}
                 className="group rounded-xl overflow-hidden border border-[#e7e0da] dark:border-[#403630] bg-white dark:bg-[#2d241c] shadow-sm hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 duration-300"
               >
                 <div className="h-44 w-full bg-cover bg-center relative" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDqsJvbSqeYubzb-Bm5vL5KBdJjvPATZeYbuyQcW6jsGf8XJ_nlZjXjftc4mG05q_hPSEW2Z1i71KoLzkslSPHz0vhuq6NuFHcfxUFZBsIk4Uj4g-Zt2zU_Zefxi9EV4u4kfUjXpx1fRupyoMUooAAOHgcUN8wxOqVPZuThXXFS2AD0BMp7hAh3X18CMsitxtiFs05haB62HmznKPb5N3p_25Wqk6f-A-TNgTfN93g0P0WMki9pT4AJitkGcFLK73AERqD_E6UCRGdX")'}}>
@@ -88,7 +108,7 @@ const UserServiceIntegrationView: React.FC = () => {
               </div>
               {/* Service 4 */}
               <div 
-                onClick={() => alert("Selecting Equipment")}
+                onClick={handleRequestClick}
                 className="group rounded-xl overflow-hidden border border-[#e7e0da] dark:border-[#403630] bg-white dark:bg-[#2d241c] shadow-sm hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 duration-300"
               >
                 <div className="h-44 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 relative group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
@@ -205,7 +225,7 @@ const UserServiceIntegrationView: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => alert("Requesting CleanCo")} className="w-full bg-[#FD780F] hover:bg-orange-600 text-white transition-colors h-8 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                  <button onClick={handleRequestClick} className="w-full bg-[#FD780F] hover:bg-orange-600 text-white transition-colors h-8 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
                     <span>Request Now</span>
                   </button>
                 </div>
@@ -224,7 +244,7 @@ const UserServiceIntegrationView: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => alert("Requesting TechFix")} className="w-full bg-[#FD780F] hover:bg-orange-600 text-white transition-colors h-8 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                  <button onClick={handleRequestClick} className="w-full bg-[#FD780F] hover:bg-orange-600 text-white transition-colors h-8 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
                     <span>Request Now</span>
                   </button>
                 </div>
@@ -243,7 +263,7 @@ const UserServiceIntegrationView: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => alert("Requesting FreshEats")} className="w-full bg-[#FD780F] hover:bg-orange-600 text-white transition-colors h-8 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                  <button onClick={handleRequestClick} className="w-full bg-[#FD780F] hover:bg-orange-600 text-white transition-colors h-8 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
                     <span>Request Now</span>
                   </button>
                 </div>
@@ -253,6 +273,23 @@ const UserServiceIntegrationView: React.FC = () => {
 
         </div>
       </div>
+      {isReservationModalOpen && (
+        <ServiceReservationModal 
+            onClose={() => setIsReservationModalOpen(false)} 
+            onConfirm={handleReservationConfirm}
+        />
+      )}
+      {isPaymentModalOpen && (
+        <PaymentModal 
+            onClose={() => setIsPaymentModalOpen(false)}
+            onSuccess={handlePaymentSuccess}
+        />
+      )}
+      {isPaymentSuccessModalOpen && (
+        <PaymentSuccessModal
+            onClose={() => setIsPaymentSuccessModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
